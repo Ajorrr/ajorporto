@@ -1,0 +1,2596 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roja Rizqullah — Game Developer &amp; Spatial UI Portfolio</title>
+  <meta name="description" content="Portofolio interaktif Roja Rizqullah — Game Developer &amp; Interactive Systems Designer. Mainkan 5 prototipe game HTML5 Canvas langsung di dalam antarmuka Spatial UI &amp; Layered Depth." />
+  <meta name="author" content="Roja Rizqullah" />
+  <meta name="theme-color" content="#14161f" />
+  <!-- Open Graph / Social Sharing Meta Tags for Vercel Deployment -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Roja Rizqullah — Game Developer &amp; Spatial UI Portfolio" />
+  <meta property="og:description" content="Eksplorasi portofolio bergaya Spatial UI &amp; Layered Depth dengan 5 game prototipe interaktif yang bisa langsung dimainkan di browser." />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Roja Rizqullah — Game Developer Portfolio" />
+  <meta name="twitter:description" content="5 Playable HTML5 Canvas Game Prototypes dalam antarmuka Spatial UI." />
+  <!-- Self-Contained Inline SVG Favicon (Zero External Dependencies) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%2338bdf8'/%3E%3Cstop offset='100%25' stop-color='%236366f1'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='18' fill='url(%23g)'/%3E%3Ctext x='32' y='41' text-anchor='middle' font-family='sans-serif' font-weight='800' font-size='26' fill='%23ffffff'%3ERR%3C/text%3E%3C/svg%3E" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --glass-bg: rgba(28, 31, 42, 0.58);
+      --glass-panel: rgba(255, 255, 255, 0.075);
+      --glass-panel-hover: rgba(255, 255, 255, 0.13);
+      --glass-border: rgba(255, 255, 255, 0.25);
+      --glass-border-subtle: rgba(255, 255, 255, 0.14);
+      --mx: 50%;
+      --my: 30%;
+    }
+
+    body.midnight-mode {
+      --glass-bg: rgba(16, 19, 28, 0.68);
+      --glass-panel: rgba(255, 255, 255, 0.06);
+      --glass-panel-hover: rgba(255, 255, 255, 0.12);
+      --glass-border: rgba(255, 255, 255, 0.21);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: #f8fafc;
+      overflow-x: hidden;
+      background: #14161f;
+      user-select: none;
+    }
+
+    /* Ambient Studio Room Backdrop */
+    .ambient-backdrop {
+      position: fixed;
+      inset: -24px;
+      z-index: 0;
+      transition: opacity 0.7s ease, filter 0.7s ease;
+      filter: blur(5px) saturate(1.06);
+      pointer-events: none;
+    }
+
+    /* Spatial 3D Stage */
+    .spatial-stage {
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 14px 34px;
+      perspective: 1600px;
+    }
+
+    /* Main Floating visionOS Glass Window */
+    .spatial-window {
+      position: relative;
+      width: 100%;
+      max-width: 1140px;
+      border-radius: 34px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(32px) saturate(155%);
+      -webkit-backdrop-filter: blur(32px) saturate(155%);
+      border: 1px solid var(--glass-border);
+      box-shadow:
+        0 45px 100px -20px rgba(0, 0, 0, 0.58),
+        0 18px 40px -15px rgba(0, 0, 0, 0.36),
+        inset 0 1px 1px rgba(255, 255, 255, 0.38),
+        inset 0 -1px 1px rgba(255, 255, 255, 0.08);
+      transform-style: preserve-3d;
+      transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), background 0.5s ease;
+    }
+
+    /* Cursor-following Specular Sheen */
+    .spatial-sheen {
+      position: absolute;
+      inset: 0;
+      border-radius: 34px;
+      pointer-events: none;
+      background: radial-gradient(
+        800px circle at var(--mx) var(--my),
+        rgba(255, 255, 255, 0.12),
+        rgba(255, 255, 255, 0.03) 38%,
+        transparent 70%
+      );
+      z-index: 1;
+    }
+
+    /* Inner Elevated Glass Cards */
+    .glass-card {
+      background: var(--glass-panel);
+      border: 1px solid var(--glass-border-subtle);
+      box-shadow:
+        0 10px 28px -8px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), background 0.25s ease, border-color 0.25s ease;
+    }
+
+    /* Z-Depth Layered Hero Banner */
+    .hero-banner {
+      position: relative;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.11) 0%, rgba(255, 255, 255, 0.045) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      box-shadow:
+        0 16px 36px -12px rgba(0, 0, 0, 0.32),
+        inset 0 1px 1px rgba(255, 255, 255, 0.3);
+      transform-style: preserve-3d;
+    }
+
+    /* Floating Z-Depth Metric Chips (No Robot) */
+    .z-chip-layer {
+      transform: translateZ(26px);
+      transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .hero-banner:hover .z-chip-layer {
+      transform: translateZ(38px) translateY(-3px);
+    }
+
+    /* Interactive Game Project Rows */
+    .game-row {
+      border-radius: 18px;
+      border: 1px solid transparent;
+      transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+      cursor: pointer;
+    }
+
+    .game-row:hover {
+      background: rgba(255, 255, 255, 0.11);
+      border-color: rgba(255, 255, 255, 0.22);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+    }
+
+    .game-row.active-project {
+      background: rgba(255, 255, 255, 0.13);
+      border-color: rgba(56, 189, 248, 0.45);
+      box-shadow: 0 10px 26px -8px rgba(56, 189, 248, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    }
+
+    /* Side Panel Items */
+    .side-item {
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .side-item:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.22);
+      transform: translateX(3px);
+    }
+
+    /* Spatial Pill & Circular Buttons */
+    .spatial-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24), 0 4px 12px rgba(0, 0, 0, 0.18);
+      backdrop-filter: blur(12px);
+      transition: all 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .spatial-btn:hover {
+      background: rgba(255, 255, 255, 0.19);
+      border-color: rgba(255, 255, 255, 0.35);
+      transform: scale(1.03);
+    }
+
+    .spatial-btn:active {
+      transform: scale(0.97);
+    }
+
+    /* Tower Selection Card */
+    .tower-card {
+      background: rgba(15, 23, 42, 0.62);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      backdrop-filter: blur(16px);
+      transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .tower-card:hover {
+      background: rgba(30, 41, 59, 0.78);
+      border-color: rgba(255, 255, 255, 0.32);
+      transform: translateY(-2px);
+    }
+    .tower-card.selected {
+      background: rgba(30, 41, 59, 0.9);
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.3), 0 10px 24px -6px rgba(56, 189, 248, 0.35);
+      transform: translateY(-3px);
+    }
+
+    /* Bottom visionOS Window Grabber Bar */
+    .spatial-grabber {
+      width: 112px;
+      height: 5px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.65);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+      transition: all 0.25s ease;
+      cursor: grab;
+    }
+    .spatial-grabber:hover {
+      width: 132px;
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    /* Game Canvas Styling */
+    #gameCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 20px;
+      touch-action: none;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 0.75; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.12); }
+    }
+    .live-dot {
+      animation: pulseDot 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- AMBIENT STUDIO ROOM BACKDROP -->
+  <div id="ambientBackdrop" class="ambient-backdrop">
+    <!-- Sunlit Warm Minimalist Studio -->
+    <svg id="sunlitRoomSvg" class="w-full h-full object-cover" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="wallGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#f3eadc"/>
+          <stop offset="55%" stop-color="#e3d5c0"/>
+          <stop offset="100%" stop-color="#cbb89e"/>
+        </linearGradient>
+        <linearGradient id="windowGlow" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#fffdf8"/>
+          <stop offset="65%" stop-color="#fef3c7"/>
+          <stop offset="100%" stop-color="#fde68a"/>
+        </linearGradient>
+        <linearGradient id="floorGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#8c7a6b"/>
+          <stop offset="100%" stop-color="#5c4d40"/>
+        </linearGradient>
+        <linearGradient id="sunBeam" x1="0" y1="0" x2="0.4" y2="1">
+          <stop offset="0%" stop-color="rgba(255, 250, 235, 0.55)"/>
+          <stop offset="100%" stop-color="rgba(255, 250, 235, 0)"/>
+        </linearGradient>
+      </defs>
+      <rect width="1600" height="760" fill="url(#wallGrad)"/>
+      <polygon points="0,0 260,110 260,720 0,880" fill="#d8c7b0"/>
+      <polygon points="1600,0 1340,110 1340,720 1600,880" fill="#d2bfa6"/>
+      <g transform="translate(320, 125)">
+        <rect x="0" y="0" width="960" height="460" rx="10" fill="url(#windowGlow)" stroke="#bfa88e" stroke-width="10"/>
+        <circle cx="180" cy="240" r="140" fill="#a3b18a" opacity="0.32"/>
+        <circle cx="760" cy="210" r="160" fill="#84a98c" opacity="0.28"/>
+        <rect x="315" y="0" width="12" height="460" fill="#cbb89e"/>
+        <rect x="635" y="0" width="12" height="460" fill="#cbb89e"/>
+        <rect x="0" y="225" width="960" height="10" fill="#cbb89e"/>
+      </g>
+      <polygon points="330,585 1270,585 1480,1000 180,1000" fill="url(#sunBeam)"/>
+      <polygon points="0,880 260,720 1340,720 1600,880 1600,1000 0,1000" fill="url(#floorGrad)"/>
+      <rect x="-40" y="610" width="440" height="250" rx="36" fill="#dfd5c5" opacity="0.9"/>
+      <rect x="1200" y="610" width="440" height="250" rx="36" fill="#dfd5c5" opacity="0.9"/>
+      <g transform="translate(560, 770)">
+        <rect x="0" y="0" width="480" height="28" rx="8" fill="#8b5a2b"/>
+        <rect x="36" y="28" width="22" height="200" fill="#5c3519"/>
+        <rect x="422" y="28" width="22" height="200" fill="#5c3519"/>
+      </g>
+    </svg>
+
+    <!-- Midnight Studio Room -->
+    <svg id="midnightRoomSvg" class="w-full h-full object-cover hidden" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="midnightBg" cx="50%" cy="35%" r="75%">
+          <stop offset="0%" stop-color="#1e2438"/>
+          <stop offset="55%" stop-color="#111524"/>
+          <stop offset="100%" stop-color="#090b12"/>
+        </radialGradient>
+        <radialGradient id="cyanAmbient" cx="25%" cy="30%" r="45%">
+          <stop offset="0%" stop-color="rgba(14, 165, 233, 0.28)"/>
+          <stop offset="100%" stop-color="rgba(14, 165, 233, 0)"/>
+        </radialGradient>
+        <radialGradient id="indigoAmbient" cx="78%" cy="65%" r="48%">
+          <stop offset="0%" stop-color="rgba(99, 102, 241, 0.28)"/>
+          <stop offset="100%" stop-color="rgba(99, 102, 241, 0)"/>
+        </radialGradient>
+      </defs>
+      <rect width="1600" height="1000" fill="url(#midnightBg)"/>
+      <rect width="1600" height="1000" fill="url(#cyanAmbient)"/>
+      <rect width="1600" height="1000" fill="url(#indigoAmbient)"/>
+      <rect x="280" y="120" width="1040" height="480" rx="16" fill="#0d1220" stroke="#283149" stroke-width="6"/>
+      <rect x="0" y="760" width="1600" height="240" fill="#0b0e17"/>
+    </svg>
+  </div>
+
+  <!-- TOP SPATIAL ENVIRONMENT CONTROLS BAR -->
+  <header class="fixed top-3.5 left-1/2 -translate-x-1/2 z-40 w-full max-w-[1140px] px-4 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+    <!-- Environment Switcher -->
+    <div class="pointer-events-auto flex items-center gap-1 p-1 rounded-full bg-black/45 backdrop-blur-xl border border-white/20 shadow-lg text-xs font-medium">
+      <button id="envSunlitBtn" onclick="setEnvironment('sunlit')" class="px-3 py-1 rounded-full bg-white/20 text-white shadow-sm transition flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-amber-300"></span>
+        <span>Daylight Studio</span>
+      </button>
+      <button id="envMidnightBtn" onclick="setEnvironment('midnight')" class="px-3 py-1 rounded-full text-white/70 hover:text-white transition flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+        <span>Midnight Studio</span>
+      </button>
+    </div>
+
+    <!-- Right Spatial Controls -->
+    <div class="pointer-events-auto flex items-center gap-2">
+      <button id="sfxToggleBtn" onclick="toggleSfx()" class="px-3 py-1.5 rounded-full bg-black/45 hover:bg-black/60 backdrop-blur-xl border border-white/20 shadow-lg text-xs font-medium text-white flex items-center gap-1.5 transition">
+        <span id="sfxDot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span id="sfxLabel">SFX: ON</span>
+      </button>
+      <button id="tiltToggleBtn" onclick="toggleTilt()" class="px-3 py-1.5 rounded-full bg-black/45 hover:bg-black/60 backdrop-blur-xl border border-white/20 shadow-lg text-xs font-medium text-white flex items-center gap-1.5 transition">
+        <svg class="w-3.5 h-3.5 text-sky-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/>
+        </svg>
+        <span id="tiltLabel">3D Tilt: ON</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN SPATIAL STAGE -->
+  <main class="spatial-stage">
+
+    <!-- MAIN FLOATING VISIONOS GLASS WINDOW -->
+    <section id="spatialWindow" class="spatial-window">
+      <div class="spatial-sheen"></div>
+
+      <!-- ========================================================= -->
+      <!-- VIEW A: ACTIVE PLAYABLE GAME CANVAS VIEW (HIDDEN ON LOAD) -->
+      <!-- ========================================================= -->
+      <div id="gameView" class="hidden relative z-10 p-4 sm:p-6 md:p-7">
+
+        <!-- Top Game Navigation & HUD Bar -->
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <!-- Left: Back to Home (Beranda) + Game Title -->
+          <div class="flex items-center gap-2.5 sm:gap-3">
+            <button onclick="switchToHub()" class="spatial-btn px-3.5 py-2 rounded-full text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 hover:bg-white/25">
+              <span>&larr; Back to Home</span>
+            </button>
+            <div class="h-5 w-px bg-white/20 hidden sm:block"></div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h1 id="activeGameTitle" class="text-base sm:text-lg font-extrabold tracking-tight text-white">Node Defense</h1>
+                <span id="activeGameTag" class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sky-500/25 text-sky-200 border border-sky-400/35">Tower Defense</span>
+              </div>
+              <p id="activeGameHint" class="text-[11px] text-white/65 hidden sm:block">Klik petak kosong untuk bangun tower &bull; Klik tower untuk Upgrade / Jual</p>
+            </div>
+          </div>
+
+          <!-- Right: Live Game Stats & Controls (Dynamically updated per game) -->
+          <div id="gameHudRight" class="flex flex-wrap items-center gap-2">
+            <!-- Tower Defense HUD Pills -->
+            <div id="tdHudBar" class="flex flex-wrap items-center gap-2">
+              <div class="px-3 py-1.5 rounded-full bg-white/10 border border-white/15 text-xs font-bold flex items-center gap-1.5">
+                <span class="text-white/60">WAVE</span>
+                <span id="tdWaveVal" class="text-sky-300 font-mono">1</span>
+              </div>
+              <div class="px-3 py-1.5 rounded-full bg-amber-500/15 border border-amber-400/30 text-xs font-bold flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                <span id="tdGoldVal" class="text-amber-300 font-mono">150G</span>
+              </div>
+              <div class="px-3 py-1.5 rounded-full bg-rose-500/15 border border-rose-400/30 text-xs font-bold flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                <span id="tdLivesVal" class="text-rose-200 font-mono">10 HP</span>
+              </div>
+              <button id="tdSpeedBtn" onclick="toggleTdSpeed()" class="spatial-btn px-3 py-1.5 rounded-full text-xs font-bold text-white font-mono">
+                1x
+              </button>
+              <button onclick="restartActiveGame()" title="Restart Game" class="spatial-btn px-3 py-1.5 rounded-full text-xs font-semibold text-white/90">
+                Restart
+              </button>
+            </div>
+
+            <!-- Generic Arcade HUD (For the other 4 games) -->
+            <div id="arcadeHudBar" class="hidden flex items-center gap-2">
+              <div class="px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 text-xs font-bold flex items-center gap-1.5">
+                <span class="text-white/60">SCORE</span>
+                <span id="arcadeScoreVal" class="text-sky-300 font-mono">0</span>
+              </div>
+              <div class="px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 text-xs font-bold flex items-center gap-1.5">
+                <span class="text-white/60">BEST</span>
+                <span id="arcadeBestVal" class="text-emerald-300 font-mono">0</span>
+              </div>
+              <button onclick="restartActiveGame()" class="spatial-btn px-3.5 py-1.5 rounded-full text-xs font-semibold text-white">
+                Restart
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Canvas Viewport Container -->
+        <div id="canvasWrapper" class="relative w-full h-[360px] sm:h-[430px] md:h-[465px] rounded-[22px] overflow-hidden border border-white/20 bg-slate-950/90 shadow-inner">
+          <canvas id="gameCanvas"></canvas>
+
+          <!-- Floating Tower Upgrade / Sell Pill (Appears above clicked tower in Node Defense) -->
+          <div id="towerActionPill" class="hidden absolute z-30 -translate-x-1/2 -translate-y-full pb-2 pointer-events-auto">
+            <div class="flex items-center gap-1.5 p-1.5 rounded-full bg-slate-900/95 backdrop-blur-xl border border-white/25 shadow-2xl text-xs">
+              <span id="towerActionLabel" class="px-2.5 font-bold text-white/90">Pulse Lv.1</span>
+              <button id="towerUpgradeBtn" onclick="upgradeSelectedTower()" class="px-3 py-1 rounded-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold transition">
+                Upgrade (60G)
+              </button>
+              <button id="towerSellBtn" onclick="sellSelectedTower()" class="px-2.5 py-1 rounded-full bg-rose-500/25 hover:bg-rose-500/40 text-rose-200 font-semibold border border-rose-400/30 transition">
+                Sell (+35G)
+              </button>
+              <button onclick="closeTowerActionPill()" class="w-6 h-6 rounded-full hover:bg-white/15 text-white/60 flex items-center justify-center">
+                &times;
+              </button>
+            </div>
+          </div>
+
+          <!-- Game Over / Victory Overlay inside Canvas -->
+          <div id="gameOverlayBanner" class="hidden absolute inset-0 z-20 bg-slate-950/75 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+            <span id="overlayBadge" class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest bg-rose-500/25 text-rose-200 border border-rose-400/30 mb-2">Core Breached</span>
+            <h2 id="overlayTitle" class="text-2xl sm:text-3xl font-extrabold text-white mb-1">Wave 5 Reached</h2>
+            <p id="overlaySub" class="text-xs sm:text-sm text-white/75 mb-5 max-w-md">Pertahanan inti ditembus drone musuh. Coba kombinasi Frost + Railgun untuk menahan gelombang berat.</p>
+            <div class="flex items-center gap-3">
+              <button onclick="restartActiveGame()" class="px-5 py-2.5 rounded-full bg-white text-slate-900 font-bold text-xs sm:text-sm shadow-lg hover:bg-sky-50 transition">
+                Main Lagi
+              </button>
+              <button onclick="switchToHub()" class="spatial-btn px-5 py-2.5 rounded-full text-xs sm:text-sm font-semibold text-white">
+                Lihat Semua Game
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Floating Tower Deck & Wave Controls (For Node Defense) -->
+        <div id="tdBottomDeck" class="mt-4 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+          <!-- 3 Selectable Spatial Glass Tower Cards -->
+          <div class="grid grid-cols-3 gap-2.5 flex-1">
+            <!-- Tower 1: Pulse -->
+            <button id="towerCard-pulse" onclick="selectTowerType('pulse')" class="tower-card selected rounded-2xl p-2.5 sm:p-3 text-left flex items-center gap-2.5 sm:gap-3">
+              <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center flex-shrink-0">
+                <span class="w-3.5 h-3.5 rounded-full bg-cyan-400 shadow-[0_0_12px_#22d3ee]"></span>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center justify-between gap-1">
+                  <span class="text-xs sm:text-sm font-bold text-white truncate">Pulse</span>
+                  <span class="text-[11px] font-mono font-bold text-amber-300">50G</span>
+                </div>
+                <p class="text-[10px] sm:text-[11px] text-white/60 truncate">Rapid cyan bolts</p>
+              </div>
+            </button>
+
+            <!-- Tower 2: Frost -->
+            <button id="towerCard-frost" onclick="selectTowerType('frost')" class="tower-card rounded-2xl p-2.5 sm:p-3 text-left flex items-center gap-2.5 sm:gap-3">
+              <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-sky-500/20 border border-sky-300/40 flex items-center justify-center flex-shrink-0">
+                <span class="w-3.5 h-3.5 rotate-45 bg-sky-300 shadow-[0_0_12px_#7dd3fc]"></span>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center justify-between gap-1">
+                  <span class="text-xs sm:text-sm font-bold text-white truncate">Frost</span>
+                  <span class="text-[11px] font-mono font-bold text-amber-300">75G</span>
+                </div>
+                <p class="text-[10px] sm:text-[11px] text-white/60 truncate">AoE slow 45%</p>
+              </div>
+            </button>
+
+            <!-- Tower 3: Rail -->
+            <button id="towerCard-rail" onclick="selectTowerType('rail')" class="tower-card rounded-2xl p-2.5 sm:p-3 text-left flex items-center gap-2.5 sm:gap-3">
+              <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-violet-500/20 border border-violet-400/40 flex items-center justify-center flex-shrink-0">
+                <span class="w-3.5 h-3.5 rounded-sm bg-violet-400 shadow-[0_0_12px_#a78bfa]"></span>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center justify-between gap-1">
+                  <span class="text-xs sm:text-sm font-bold text-white truncate">Rail</span>
+                  <span class="text-[11px] font-mono font-bold text-amber-300">110G</span>
+                </div>
+                <p class="text-[10px] sm:text-[11px] text-white/60 truncate">Heavy sniper beam</p>
+              </div>
+            </button>
+          </div>
+
+          <!-- Wave Launch & Auto-Advance Controls -->
+          <div class="flex items-center justify-between sm:justify-end gap-2.5">
+            <button id="autoWaveBtn" onclick="toggleAutoWave()" class="spatial-btn px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-white/80 flex items-center gap-1.5">
+              <span id="autoWaveDot" class="w-2 h-2 rounded-full bg-white/35"></span>
+              <span>Auto Wave</span>
+            </button>
+
+            <button id="startWaveBtn" onclick="startNextWave()" class="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-sky-400 to-cyan-300 hover:from-sky-300 hover:to-cyan-200 text-slate-950 font-extrabold text-xs sm:text-sm shadow-lg shadow-sky-500/25 transition flex items-center gap-2">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              <span id="startWaveLabel">Start Wave 1</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Bottom Quick Switcher Strip for Other Prototypes -->
+        <div class="mt-4 pt-3.5 border-t border-white/15 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <span class="text-white/60 font-medium">Prototype Switcher:</span>
+          <div id="quickGamePills" class="flex flex-wrap items-center gap-1.5">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================= -->
+      <!-- VIEW B: BERANDA / ROJA RIZQULLAH PORTFOLIO HUB (DEFAULT)  -->
+      <!-- ========================================================= -->
+      <div id="hubView" class="relative z-10 p-5 sm:p-7 md:p-8">
+
+        <!-- 1. TOP NAVIGATION BAR -->
+        <nav class="flex items-center justify-between gap-4 mb-6">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-500 border border-white/35 shadow-md flex items-center justify-center text-xs font-extrabold text-white">
+              RR
+            </div>
+            <div class="flex items-center gap-2 text-xs sm:text-sm font-medium text-white/75">
+              <span class="text-white font-semibold tracking-tight">Roja Rizqullah</span>
+              <span class="text-white/40">&rsaquo;</span>
+              <span>Beranda &amp; Prototypes</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2.5">
+            <button onclick="launchGame('node-defense')" class="hidden sm:inline-flex px-3.5 py-1.5 rounded-full bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/35 text-xs font-semibold text-sky-200 transition items-center gap-1.5">
+              <span>Launch Featured Game</span>
+            </button>
+            <button onclick="openContactModal()" class="spatial-btn px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold text-white tracking-tight flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 live-dot"></span>
+              <span>Contact</span>
+            </button>
+          </div>
+        </nav>
+
+        <!-- 2. HERO BANNER WITH Z-DEPTH LAYERED METRIC CHIPS (NO ROBOT) -->
+        <div class="hero-banner px-6 py-6 sm:px-8 sm:py-7 mb-7 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+          <div class="max-w-xl z-10">
+            <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] font-semibold uppercase tracking-widest text-sky-200 mb-2.5">
+              <span>Game Developer &amp; Interactive Systems Designer</span>
+            </div>
+            <h1 class="text-3xl sm:text-4xl md:text-[42px] font-extrabold tracking-tight text-white leading-tight mb-2">
+              Roja Rizqullah
+            </h1>
+            <p class="text-xs sm:text-sm text-white/80 leading-relaxed mb-4">
+              Merancang mekanik gameplay responsif, simulasi fisika real-time, dan antarmuka Spatial UI berdimensi. Pilih salah satu dari 5 prototipe game di bawah untuk langsung memainkannya di browser.
+            </p>
+            <div class="flex flex-wrap items-center gap-2.5">
+              <button onclick="launchGame('node-defense')" class="px-4 py-2 rounded-full bg-white text-slate-900 font-extrabold text-xs shadow-lg hover:bg-sky-50 transition flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                <span>Launch Featured Game</span>
+              </button>
+              <button onclick="openContactModal()" class="spatial-btn px-4 py-2 rounded-full text-xs font-semibold text-white">
+                Contact &amp; Collaborate
+              </button>
+            </div>
+          </div>
+
+          <!-- Layered Z-Depth Floating Metric & Engine Chips -->
+          <div class="z-chip-layer grid grid-cols-2 gap-3 w-full lg:w-auto lg:min-w-[310px]">
+            <div class="glass-card rounded-2xl p-3.5">
+              <p class="text-[10px] uppercase tracking-wider text-white/55 font-semibold mb-1">Interactive Builds</p>
+              <p class="text-sm font-extrabold text-sky-300">5 Playable Prototypes</p>
+              <p class="text-[11px] text-white/70 mt-0.5">Zero-Install WebGL/2D</p>
+            </div>
+            <div class="glass-card rounded-2xl p-3.5">
+              <p class="text-[10px] uppercase tracking-wider text-white/55 font-semibold mb-1">Runtime Target</p>
+              <p class="text-sm font-extrabold text-emerald-300">60 FPS Canvas Engine</p>
+              <p class="text-[11px] text-white/70 mt-0.5">Delta-Time Simulation</p>
+            </div>
+            <div class="glass-card rounded-2xl p-3.5 col-span-2 flex items-center justify-between gap-3">
+              <div>
+                <p class="text-[10px] uppercase tracking-wider text-violet-300 font-semibold">Spatial UI Architecture</p>
+                <p class="text-xs font-bold text-white">Layered Z-Depth &amp; Tactile Game Feel</p>
+              </div>
+              <button onclick="launchGame('node-defense')" class="px-3.5 py-1.5 rounded-full bg-sky-400/20 hover:bg-sky-400/30 border border-sky-400/40 text-sky-200 text-xs font-extrabold transition flex-shrink-0">
+                Play TD &rarr;
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. MAIN CONTENT GRID (2 Columns: Left Prototypes List / Right Active Build Showcase & Stack) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+
+          <!-- LEFT COLUMN: 5 Playable Game Prototypes -->
+          <div class="lg:col-span-8 flex flex-col">
+            <div class="flex items-center justify-between mb-3.5 px-1">
+              <h2 class="text-lg sm:text-xl font-bold tracking-tight text-white">Playable Game Prototypes</h2>
+              <span class="text-xs text-white/60 font-medium">Klik kartu untuk langsung bermain</span>
+            </div>
+
+            <div id="hubGamesList" class="space-y-2.5">
+              <!-- Populated via JS -->
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN: Active Build Showcase & Core Disciplines -->
+          <div class="lg:col-span-4 flex flex-col gap-4">
+            <!-- Active Build Showcase Card -->
+            <div class="glass-card rounded-[22px] p-4 sm:p-5 border-sky-400/30 bg-gradient-to-br from-sky-500/10 to-transparent">
+              <div class="flex items-center justify-between mb-2.5">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sky-500/25 text-sky-200 border border-sky-400/35">Active Build Showcase</span>
+                <span class="text-[11px] font-mono text-emerald-300 font-bold">v1.2 Live</span>
+              </div>
+              <h3 class="text-base sm:text-lg font-extrabold text-white tracking-tight mb-1">Node Defense</h3>
+              <p class="text-xs text-white/75 leading-relaxed mb-4">
+                Tactical Grid Tower Defense dengan 3 kelas turret (Pulse, Frost AoE Slow, Railgun), sistem upgrade 3 level, dan jalur S-curve interaktif.
+              </p>
+              <button onclick="launchGame('node-defense')" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-sky-400 to-cyan-300 hover:from-sky-300 hover:to-cyan-200 text-slate-950 font-extrabold text-xs shadow-lg shadow-sky-500/20 transition flex items-center justify-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                <span>Play Now — Node Defense</span>
+              </button>
+            </div>
+
+            <!-- Core Disciplines & Stack -->
+            <div class="glass-card rounded-[22px] p-4 sm:p-5">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm sm:text-base font-bold text-white tracking-tight">Core Disciplines &amp; Stack</h3>
+                <span class="text-[11px] font-medium text-sky-300/80">2026</span>
+              </div>
+              <div class="flex flex-wrap gap-2 text-xs">
+                <span class="px-3 py-1.5 rounded-xl bg-white/8 border border-white/15 text-white/90 font-medium">Godot Engine</span>
+                <span class="px-3 py-1.5 rounded-xl bg-white/8 border border-white/15 text-white/90 font-medium">HTML5 Canvas</span>
+                <span class="px-3 py-1.5 rounded-xl bg-white/8 border border-white/15 text-white/90 font-medium">Shaders &amp; Physics</span>
+                <span class="px-3 py-1.5 rounded-xl bg-white/8 border border-white/15 text-white/90 font-medium">UI/UX Spatial Design</span>
+                <span class="px-3 py-1.5 rounded-xl bg-white/8 border border-white/15 text-white/90 font-medium">AI State Machines</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. BOTTOM ENGINE QUICK-LAUNCH DOCK -->
+        <footer class="pt-4 border-t border-white/15 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-3.5 w-full sm:w-auto">
+            <div class="flex items-center gap-1">
+              <button onclick="cycleHubSelection(-1)" title="Previous Prototype" class="spatial-btn w-8 h-8 rounded-full flex items-center justify-center text-white/80">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+              </button>
+              <button onclick="cycleHubSelection(1)" title="Next Prototype" class="spatial-btn w-8 h-8 rounded-full flex items-center justify-center text-white/80">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+              </button>
+            </div>
+            <div id="dockThumb" class="w-11 h-11 rounded-xl overflow-hidden border border-white/25 shadow-md flex-shrink-0"></div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <p id="dockTitle" class="text-sm font-bold text-white truncate">Node Defense</p>
+                <span id="dockGenre" class="px-2 py-0.5 rounded text-[10px] font-semibold bg-sky-500/25 text-sky-200 border border-sky-400/30 flex-shrink-0">Tower Defense</span>
+              </div>
+              <p id="dockControls" class="text-xs text-white/65 truncate">Kontrol: Klik petak untuk pasang tower &amp; tahan gelombang musuh</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+            <button onclick="openInspectModal(selectedHubIndex)" class="spatial-btn px-4 py-2 rounded-full text-xs font-semibold text-white">
+              Tech Specs
+            </button>
+            <button onclick="launchGame(prototypesData[selectedHubIndex].id)" class="px-5 py-2 rounded-full bg-white text-slate-900 font-extrabold text-xs shadow-lg hover:bg-sky-50 transition flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              <span>Launch Prototype</span>
+            </button>
+          </div>
+        </footer>
+
+      </div>
+    </section>
+
+    <!-- BOTTOM VISIONOS WINDOW GRABBER BAR -->
+    <div class="mt-4 flex items-center justify-center gap-3 z-20">
+      <button onclick="resetSpatialTilt()" title="Recenter Window" class="w-2.5 h-2.5 rounded-full bg-white/45 hover:bg-white/90 transition shadow"></button>
+      <div onclick="recenterPulse()" title="Spatial Window Handle" class="spatial-grabber"></div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: PROTOTYPE TECHNICAL SPECS INSPECTOR -->
+  <div id="inspectModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50 backdrop-blur-md">
+    <div class="relative w-full max-w-xl rounded-[28px] bg-[#161923]/90 backdrop-blur-2xl border border-white/25 shadow-2xl p-6 text-white">
+      <div class="flex items-start justify-between gap-4 mb-4">
+        <div class="flex items-center gap-3.5">
+          <div id="modalCover" class="w-14 h-14 rounded-2xl overflow-hidden border border-white/25 flex-shrink-0"></div>
+          <div>
+            <span id="modalGenre" class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sky-500/25 text-sky-200 border border-sky-400/30">Tower Defense</span>
+            <h3 id="modalTitle" class="text-xl font-extrabold tracking-tight mt-1">Node Defense</h3>
+          </div>
+        </div>
+        <button onclick="closeModal('inspectModal')" class="spatial-btn w-8 h-8 rounded-full flex items-center justify-center text-white/80">
+          &times;
+        </button>
+      </div>
+
+      <p id="modalDesc" class="text-xs sm:text-sm text-white/80 leading-relaxed mb-4"></p>
+
+      <div class="glass-card rounded-2xl p-4 mb-5">
+        <p class="text-[11px] font-bold uppercase tracking-wider text-sky-300 mb-2">Mekanik &amp; Implementasi</p>
+        <ul id="modalBullets" class="space-y-1.5 text-xs text-white/85"></ul>
+      </div>
+
+      <div class="flex items-center justify-end gap-2.5">
+        <button onclick="closeModal('inspectModal')" class="px-4 py-2 rounded-full text-xs font-semibold text-white/80 bg-white/10 hover:bg-white/15 transition">
+          Tutup
+        </button>
+        <button id="modalPlayBtn" class="px-5 py-2 rounded-full bg-white text-slate-900 font-extrabold text-xs shadow-lg hover:bg-sky-50 transition">
+          Mainkan Sekarang &rarr;
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONTACT / HIRE ROJA RIZQULLAH -->
+  <div id="contactModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50 backdrop-blur-md">
+    <div class="relative w-full max-w-md rounded-[28px] bg-[#161923]/92 backdrop-blur-2xl border border-white/25 shadow-2xl p-6 text-white">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <p class="text-[11px] font-semibold uppercase tracking-widest text-sky-300">Direct Inquiry</p>
+          <h3 class="text-xl font-extrabold tracking-tight">Get in Touch with Roja Rizqullah</h3>
+        </div>
+        <button onclick="closeModal('contactModal')" class="spatial-btn w-8 h-8 rounded-full flex items-center justify-center text-white/80">
+          &times;
+        </button>
+      </div>
+
+      <p class="text-xs text-white/75 leading-relaxed mb-3.5">
+        Tertarik berkolaborasi untuk pengembangan game indie, prototipe gameplay interaktif, atau desain Spatial UI? Salin email langsung atau kirim pesan singkat di bawah ini.
+      </p>
+
+      <!-- One-Click Email Copy Pill + Social Links -->
+      <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-2xl bg-white/8 border border-white/15 mb-4">
+        <span id="rojaEmailText" class="text-xs font-mono text-sky-200 pl-1.5">roja.rizqullah@gamedev.id</span>
+        <div class="flex items-center gap-1.5">
+          <button type="button" onclick="copyRojaEmail()" class="px-3 py-1 rounded-full bg-sky-400/20 hover:bg-sky-400/30 border border-sky-400/40 text-[11px] font-bold text-sky-200 transition">
+            Copy Email
+          </button>
+          <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-[11px] font-semibold text-white/85 transition">
+            GitHub
+          </a>
+          <a href="https://itch.io" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-[11px] font-semibold text-white/85 transition">
+            itch.io
+          </a>
+        </div>
+      </div>
+
+      <form onsubmit="handleContactSubmit(event)" class="space-y-3">
+        <div>
+          <label class="block text-[11px] font-semibold text-white/70 mb-1">Nama / Studio</label>
+          <input type="text" required placeholder="Nama kamu atau nama tim" class="w-full px-3.5 py-2 rounded-xl bg-white/10 border border-white/15 text-xs text-white placeholder-white/40 focus:outline-none focus:border-sky-400">
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold text-white/70 mb-1">Topik Proyek</label>
+          <select class="w-full px-3.5 py-2 rounded-xl bg-[#202534] border border-white/15 text-xs text-white focus:outline-none focus:border-sky-400">
+            <option>Game Prototype / Gameplay Systems</option>
+            <option>Tower Defense / Strategy Mechanics</option>
+            <option>Interactive Web / Spatial UI</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold text-white/70 mb-1">Pesan</label>
+          <textarea rows="3" required placeholder="Ceritakan singkat konsep game atau kebutuhanmu..." class="w-full px-3.5 py-2 rounded-xl bg-white/10 border border-white/15 text-xs text-white placeholder-white/40 focus:outline-none focus:border-sky-400"></textarea>
+        </div>
+        <button type="submit" class="w-full py-2.5 rounded-full bg-white text-slate-900 font-extrabold text-xs shadow-lg hover:bg-sky-50 transition">
+          Kirim Pesan ke Roja Rizqullah
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- FLOATING TOAST NOTIFICATION -->
+  <div id="spatialToast" class="fixed bottom-5 right-5 z-50 pointer-events-none opacity-0 translate-y-3 transition-all duration-300">
+    <div class="px-4 py-2.5 rounded-full bg-slate-900/95 backdrop-blur-xl border border-white/25 shadow-2xl text-xs font-medium text-white flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+      <span id="toastMessage">Ready</span>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. DATA PROTOTIPE GAME MILIK ROJA RIZQULLAH
+    // =========================================================================
+    const prototypesData = [
+      {
+        id: 'node-defense',
+        title: 'Node Defense',
+        genre: 'Tower Defense',
+        tagColor: 'bg-sky-500/25 text-sky-200 border-sky-400/35',
+        subtitle: 'Grid-Based Tactical Defense • 3 Tower Classes & Upgrades',
+        controlsHint: 'Klik petak kosong untuk bangun tower • Klik tower terpasang untuk Upgrade / Jual',
+        description: 'Prototipe Tower Defense minimalis berbasis grid 12x7 dengan jalur S-curve bercahaya. Pemain menempatkan 3 jenis node pertahanan (Pulse, Frost, Rail) untuk melindungi Core dari gelombang drone.',
+        bullets: [
+          'Sistem grid interaktif dengan pratinjau jangkauan (range ring) real-time saat hover',
+          '3 kelas tower unik: Rapid Pulse, Cryo Frost (slow 45% AoE), dan Heavy Railgun',
+          'Upgrade level tower untuk meningkatkan damage & radius, atau jual kembali (+70% Gold)'
+        ],
+        coverSvg: `
+          <svg viewBox="0 0 80 80" class="w-full h-full">
+            <rect width="80" height="80" fill="#0f172a"/>
+            <path d="M10 22 H44 V56 H70" fill="none" stroke="#38bdf8" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.45"/>
+            <circle cx="28" cy="39" r="10" fill="#22d3ee"/>
+            <circle cx="28" cy="39" r="18" fill="none" stroke="#22d3ee" stroke-width="1.5" stroke-dasharray="3 3"/>
+            <polygon points="56,22 65,36 47,36" fill="#a78bfa"/>
+          </svg>`
+      },
+      {
+        id: 'parry-protocol',
+        title: 'Parry Protocol',
+        genre: 'Timing Action',
+        tagColor: 'bg-amber-500/25 text-amber-200 border-amber-400/35',
+        subtitle: 'Reflex Timing & Hitstop Feedback • Click / Space to Parry',
+        controlsHint: 'Klik layar atau tekan [SPACE] tepat saat proyektil menyentuh cincin perisai',
+        description: 'Eksperimen game feel yang berfokus pada presisi timing tangkisan (parry), efek hitstop singkat, getaran kamera mikro, dan pantulan proyektil berkecepatan tinggi.',
+        bullets: [
+          'Jendela parry presisi dengan efek slow-motion mikro dan partikel percikan energi',
+          'Kecepatan serangan musuh meningkat secara dinamis setiap kombo berhasil',
+          'Kontrol satu tombol yang responsif di desktop maupun layar sentuh'
+        ],
+        coverSvg: `
+          <svg viewBox="0 0 80 80" class="w-full h-full">
+            <rect width="80" height="80" fill="#18181b"/>
+            <circle cx="40" cy="40" r="22" fill="none" stroke="#fbbf24" stroke-width="4"/>
+            <circle cx="40" cy="40" r="10" fill="#38bdf8"/>
+            <line x1="56" y1="24" x2="72" y2="8" stroke="#f43f5e" stroke-width="4" stroke-linecap="round"/>
+          </svg>`
+      },
+      {
+        id: 'void-thruster',
+        title: 'Void Thruster',
+        genre: 'Arcade Flight',
+        tagColor: 'bg-indigo-500/25 text-indigo-200 border-indigo-400/35',
+        subtitle: 'Zero-G Momentum Dodger • Mouse / Touch / Arrow Steering',
+        controlsHint: 'Gerakkan kursor / sentuh layar (atau tombol Panah) untuk menghindari asteroid',
+        description: 'Simulasi kendali pesawat inersia di ruang hampa dengan jejak partikel pendorong dan rintangan asteroid berkecepatan tinggi.',
+        bullets: [
+          'Pergerakan smooth damping dengan kemiringan badan pesawat dinamis',
+          'Kumpulkan orb energi biru untuk menggandakan skor beruntun',
+          'Skala kesulitan progresif berdasarkan jarak tempuh'
+        ],
+        coverSvg: `
+          <svg viewBox="0 0 80 80" class="w-full h-full">
+            <rect width="80" height="80" fill="#090d16"/>
+            <polygon points="40,16 58,60 40,50 22,60" fill="#e0f2fe"/>
+            <circle cx="24" cy="26" r="6" fill="#64748b"/>
+            <circle cx="60" cy="34" r="8" fill="#475569"/>
+          </svg>`
+      },
+      {
+        id: 'grid-dash',
+        title: 'Grid Dash',
+        genre: 'Tactical Runner',
+        tagColor: 'bg-emerald-500/25 text-emerald-200 border-emerald-400/35',
+        subtitle: '3-Lane Rhythm & Hazard Dash • A/D or Tap Left/Right',
+        controlsHint: 'Tekan [A]/[D], Panah Kiri/Kanan, atau klik sisi layar untuk berpindah jalur',
+        description: 'Prototipe pelari taktis 3 jalur dengan transisi perpindahan berbasis kurva pegas (spring interpolation) dan pola rintangan ritmis.',
+        bullets: [
+          'Interpolasi perpindahan jalur instan tanpa rasa kaku',
+          'Kombinasi rintangan laser dan kristal skor di tiga jalur paralel',
+          'Respons input buffer untuk perpindahan jalur cepat berturut-turut'
+        ],
+        coverSvg: `
+          <svg viewBox="0 0 80 80" class="w-full h-full">
+            <rect width="80" height="80" fill="#06201a"/>
+            <line x1="26" y1="10" x2="26" y2="70" stroke="#10b981" stroke-width="2" opacity="0.4"/>
+            <line x1="54" y1="10" x2="54" y2="70" stroke="#10b981" stroke-width="2" opacity="0.4"/>
+            <rect x="33" y="44" width="14" height="14" rx="4" fill="#34d399"/>
+            <rect x="19" y="20" width="14" height="10" rx="3" fill="#f43f5e"/>
+          </svg>`
+      },
+      {
+        id: 'gravity-sandbox',
+        title: 'Gravity Sandbox',
+        genre: 'Physics Toy',
+        tagColor: 'bg-violet-500/25 text-violet-200 border-violet-400/35',
+        subtitle: 'Interactive Elastic Orb & Attractor Simulation • Click & Drag',
+        controlsHint: 'Klik di mana saja untuk memunculkan bola fisika • Tahan klik untuk menarik gravitasi',
+        description: 'Taman bermain fisika 2D interaktif dengan tumbukan elastis antar-bola, medan tarik gravitasi kursor, dan visualisasi kecepatan.',
+        bullets: [
+          'Deteksi tumbukan lingkaran-ke-lingkaran dengan konservasi momentum',
+          'Medan gravitasi interaktif saat tombol mouse atau sentuhan ditahan',
+          'Jejak cahaya dinamis yang berubah warna sesuai kecepatan gerak bola'
+        ],
+        coverSvg: `
+          <svg viewBox="0 0 80 80" class="w-full h-full">
+            <rect width="80" height="80" fill="#130f26"/>
+            <circle cx="32" cy="34" r="11" fill="#a78bfa"/>
+            <circle cx="52" cy="48" r="8" fill="#38bdf8"/>
+            <circle cx="44" cy="24" r="5" fill="#f472b6"/>
+          </svg>`
+      }
+    ];
+
+    // =========================================================================
+    // 2. STATE GLOBAL UI & AUDIO SINTETIS
+    // =========================================================================
+    let activeGameId = 'node-defense';
+    let selectedHubIndex = 0;
+    let tiltEnabled = true;
+    let sfxEnabled = true;
+    let audioCtx = null;
+    let animFrameId = null;
+
+    function playTone(freq = 640, type = 'sine', dur = 0.05, vol = 0.035) {
+      if (!sfxEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(Math.max(80, freq * 0.75), audioCtx.currentTime + dur);
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + dur);
+      } catch (e) {}
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('spatialToast');
+      document.getElementById('toastMessage').textContent = msg;
+      toast.classList.remove('opacity-0', 'translate-y-3');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-3');
+      }, 2400);
+    }
+
+    // =========================================================================
+    // 3. NAVIGASI ANTARA GAME VIEW & PORTFOLIO HUB
+    // =========================================================================
+    function switchToHub() {
+      playTone(540, 'sine', 0.05);
+      document.getElementById('gameView').classList.add('hidden');
+      document.getElementById('hubView').classList.remove('hidden');
+      renderHubList();
+      updateHubDock();
+    }
+
+    function launchGame(gameId) {
+      playTone(760, 'sine', 0.06);
+      activeGameId = gameId;
+      const idx = prototypesData.findIndex(g => g.id === gameId);
+      if (idx !== -1) selectedHubIndex = idx;
+
+      document.getElementById('hubView').classList.add('hidden');
+      document.getElementById('gameView').classList.remove('hidden');
+
+      const meta = prototypesData[selectedHubIndex];
+      document.getElementById('activeGameTitle').textContent = meta.title;
+      document.getElementById('activeGameTag').textContent = meta.genre;
+      document.getElementById('activeGameTag').className = `px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${meta.tagColor}`;
+      document.getElementById('activeGameHint').textContent = meta.controlsHint;
+
+      const isTd = gameId === 'node-defense';
+      document.getElementById('tdHudBar').classList.toggle('hidden', !isTd);
+      document.getElementById('tdBottomDeck').classList.toggle('hidden', !isTd);
+      document.getElementById('arcadeHudBar').classList.toggle('hidden', isTd);
+      document.getElementById('towerActionPill').classList.add('hidden');
+      document.getElementById('gameOverlayBanner').classList.add('hidden');
+
+      renderQuickGamePills();
+      resizeCanvas();
+      initSelectedGameEngine();
+    }
+
+    function renderQuickGamePills() {
+      const container = document.getElementById('quickGamePills');
+      container.innerHTML = prototypesData.map(g => {
+        const active = g.id === activeGameId;
+        return `
+          <button onclick="launchGame('${g.id}')" class="px-3 py-1 rounded-full font-semibold transition ${
+            active
+              ? 'bg-white text-slate-950 shadow'
+              : 'bg-white/10 text-white/75 hover:bg-white/20 hover:text-white border border-white/10'
+          }">
+            ${g.title}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function renderHubList() {
+      const list = document.getElementById('hubGamesList');
+      list.innerHTML = prototypesData.map((g, idx) => {
+        const isSelected = idx === selectedHubIndex;
+        return `
+          <div onclick="launchGame('${g.id}')" onmouseenter="hoverHubCard(${idx})" class="game-row ${isSelected ? 'active-project' : ''} px-3.5 py-2.5 sm:px-4 sm:py-3 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3.5 min-w-0 flex-1">
+              <div class="w-12 h-12 rounded-xl overflow-hidden border border-white/25 shadow-md flex-shrink-0">
+                ${g.coverSvg}
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm sm:text-[15px] font-bold text-white truncate">${g.title}</h3>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold border ${g.tagColor}">${g.genre}</span>
+                </div>
+                <p class="text-xs text-white/65 truncate mt-0.5">${g.subtitle}</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <button onclick="event.stopPropagation(); openInspectModal(${idx})" title="Inspect Tech Specs" class="spatial-btn w-8 h-8 rounded-full flex items-center justify-center text-white/85 font-bold">
+                &#8942;
+              </button>
+              <button onclick="event.stopPropagation(); launchGame('${g.id}')" class="px-3.5 py-1.5 rounded-full bg-white text-slate-900 font-extrabold text-xs shadow hover:bg-sky-50 transition flex items-center gap-1">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                <span>Play</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function hoverHubCard(idx) {
+      if (selectedHubIndex === idx) return;
+      selectedHubIndex = idx;
+      const rows = document.querySelectorAll('#hubGamesList .game-row');
+      rows.forEach((r, i) => r.classList.toggle('active-project', i === idx));
+      updateHubDock();
+    }
+
+    function cycleHubSelection(dir) {
+      playTone(620);
+      selectedHubIndex = (selectedHubIndex + dir + prototypesData.length) % prototypesData.length;
+      renderHubList();
+      updateHubDock();
+    }
+
+    function copyRojaEmail() {
+      const email = document.getElementById('rojaEmailText').textContent;
+      const tempInput = document.createElement('input');
+      tempInput.value = email;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      try {
+        document.execCommand('copy');
+        playTone(840);
+        showToast(`Email disalin: ${email}`);
+      } catch (err) {
+        showToast(email);
+      }
+      document.body.removeChild(tempInput);
+    }
+
+    function selectHubCard(idx) {
+      playTone(620);
+      selectedHubIndex = idx;
+      renderHubList();
+      updateHubDock();
+    }
+
+    function updateHubDock() {
+      const g = prototypesData[selectedHubIndex];
+      document.getElementById('dockThumb').innerHTML = g.coverSvg;
+      document.getElementById('dockTitle').textContent = g.title;
+      document.getElementById('dockGenre').textContent = g.genre;
+      document.getElementById('dockControls').textContent = g.controlsHint;
+    }
+
+    function openInspectModal(idx) {
+      playTone(720);
+      const g = prototypesData[idx];
+      document.getElementById('modalCover').innerHTML = g.coverSvg;
+      document.getElementById('modalGenre').textContent = g.genre;
+      document.getElementById('modalTitle').textContent = g.title;
+      document.getElementById('modalDesc').textContent = g.description;
+      document.getElementById('modalBullets').innerHTML = g.bullets
+        .map(b => `<li class="flex items-start gap-2"><span class="text-sky-300 mt-0.5">&bull;</span><span>${b}</span></li>`)
+        .join('');
+      document.getElementById('modalPlayBtn').onclick = () => {
+        closeModal('inspectModal');
+        launchGame(g.id);
+      };
+      const modal = document.getElementById('inspectModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function openContactModal() {
+      playTone(740);
+      const modal = document.getElementById('contactModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeModal(id) {
+      playTone(500);
+      const modal = document.getElementById(id);
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function handleContactSubmit(e) {
+      e.preventDefault();
+      closeModal('contactModal');
+      showToast('Pesan terkirim ke Roja Rizqullah!');
+      e.target.reset();
+    }
+
+    // =========================================================================
+    // 4. CANVAS SETUP & SHARED INPUT HANDLING
+    // =========================================================================
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let cw = 800;
+    let ch = 450;
+
+    function resizeCanvas() {
+      const wrapper = document.getElementById('canvasWrapper');
+      if (!wrapper) return;
+      const rect = wrapper.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      cw = Math.max(320, rect.width);
+      ch = Math.max(280, rect.height);
+      canvas.width = cw * dpr;
+      canvas.height = ch * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (activeGameId === 'node-defense') {
+        tdComputeGridMetrics();
+      }
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+
+    // =========================================================================
+    // 5. GAME ENGINE 1: NODE DEFENSE (SIMPLE GRID TOWER DEFENSE)
+    // =========================================================================
+    const TD_COLS = 12;
+    const TD_ROWS = 7;
+
+    // 0 = Buildable Grass/Deck, 1 = Glowing Path, 2 = Spawn Portal, 3 = Core Crystal
+    const TD_MAP = [
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [2, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0],
+      [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0],
+      [0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+      [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    ];
+
+    // Ordered grid waypoints from SPAWN (0,1) to CORE (11,5)
+    const TD_WAYPOINTS_GRID = [
+      { c: 0, r: 1 },
+      { c: 3, r: 1 },
+      { c: 3, r: 3 },
+      { c: 7, r: 3 },
+      { c: 7, r: 1 },
+      { c: 10, r: 1 },
+      { c: 10, r: 5 },
+      { c: 11, r: 5 }
+    ];
+
+    const TOWER_SPECS = {
+      pulse: {
+        name: 'Pulse',
+        cost: 50,
+        color: '#22d3ee',
+        glow: 'rgba(34, 211, 238, 0.35)',
+        rangeTiles: 2.6,
+        fireRate: 0.42, // seconds
+        damage: 18,
+        projSpeed: 420
+      },
+      frost: {
+        name: 'Frost',
+        cost: 75,
+        color: '#7dd3fc',
+        glow: 'rgba(125, 211, 252, 0.35)',
+        rangeTiles: 2.35,
+        fireRate: 1.05,
+        damage: 10,
+        slowFactor: 0.55, // 45% slow
+        slowDuration: 2.2
+      },
+      rail: {
+        name: 'Rail',
+        cost: 110,
+        color: '#a78bfa',
+        glow: 'rgba(167, 139, 250, 0.38)',
+        rangeTiles: 3.9,
+        fireRate: 1.45,
+        damage: 68
+      }
+    };
+
+    let td = {
+      tileSize: 54,
+      offsetX: 0,
+      offsetY: 0,
+      gold: 150,
+      lives: 10,
+      wave: 1,
+      waveActive: false,
+      autoWave: false,
+      speedMult: 1,
+      selectedBuildType: 'pulse',
+      hoverCell: null,
+      selectedTower: null,
+      towers: [],
+      enemies: [],
+      projectiles: [],
+      beams: [],
+      pulses: [],
+      particles: [],
+      popups: [],
+      spawnQueue: [],
+      spawnTimer: 0,
+      gameOver: false,
+      corePulsePhase: 0
+    };
+
+    function tdComputeGridMetrics() {
+      const padX = 24;
+      const padY = 20;
+      const availW = cw - padX * 2;
+      const availH = ch - padY * 2;
+      td.tileSize = Math.floor(Math.min(availW / TD_COLS, availH / TD_ROWS));
+      td.offsetX = Math.floor((cw - td.tileSize * TD_COLS) / 2);
+      td.offsetY = Math.floor((ch - td.tileSize * TD_ROWS) / 2);
+    }
+
+    function gridToPixel(c, r) {
+      return {
+        x: td.offsetX + (c + 0.5) * td.tileSize,
+        y: td.offsetY + (r + 0.5) * td.tileSize
+      };
+    }
+
+    function pixelToGrid(px, py) {
+      const c = Math.floor((px - td.offsetX) / td.tileSize);
+      const r = Math.floor((py - td.offsetY) / td.tileSize);
+      if (c < 0 || c >= TD_COLS || r < 0 || r >= TD_ROWS) return null;
+      return { c, r };
+    }
+
+    function initNodeDefense() {
+      tdComputeGridMetrics();
+      td.gold = 150;
+      td.lives = 10;
+      td.wave = 1;
+      td.waveActive = false;
+      td.speedMult = 1;
+      td.selectedTower = null;
+      td.towers = [];
+      td.enemies = [];
+      td.projectiles = [];
+      td.beams = [];
+      td.pulses = [];
+      td.particles = [];
+      td.popups = [];
+      td.spawnQueue = [];
+      td.spawnTimer = 0;
+      td.gameOver = false;
+
+      document.getElementById('tdSpeedBtn').textContent = '1x';
+      document.getElementById('gameOverlayBanner').classList.add('hidden');
+      closeTowerActionPill();
+      updateTdHud();
+    }
+
+    function updateTdHud() {
+      document.getElementById('tdWaveVal').textContent = td.wave;
+      document.getElementById('tdGoldVal').textContent = `${td.gold}G`;
+      document.getElementById('tdLivesVal').textContent = `${td.lives} HP`;
+      const startBtn = document.getElementById('startWaveBtn');
+      const startLbl = document.getElementById('startWaveLabel');
+      if (td.waveActive) {
+        startLbl.textContent = `Wave ${td.wave} Active...`;
+        startBtn.classList.add('opacity-65');
+      } else {
+        startLbl.textContent = `Start Wave ${td.wave}`;
+        startBtn.classList.remove('opacity-65');
+      }
+    }
+
+    function selectTowerType(type) {
+      playTone(680);
+      td.selectedBuildType = type;
+      closeTowerActionPill();
+      ['pulse', 'frost', 'rail'].forEach(t => {
+        document.getElementById(`towerCard-${t}`).classList.toggle('selected', t === type);
+      });
+    }
+
+    function toggleTdSpeed() {
+      td.speedMult = td.speedMult === 1 ? 2 : 1;
+      playTone(td.speedMult === 2 ? 840 : 580);
+      document.getElementById('tdSpeedBtn').textContent = `${td.speedMult}x`;
+    }
+
+    function toggleAutoWave() {
+      td.autoWave = !td.autoWave;
+      playTone(td.autoWave ? 780 : 520);
+      const dot = document.getElementById('autoWaveDot');
+      dot.classList.toggle('bg-emerald-400', td.autoWave);
+      dot.classList.toggle('bg-white/35', !td.autoWave);
+      showToast(td.autoWave ? 'Auto Wave: Aktif' : 'Auto Wave: Nonaktif');
+      if (td.autoWave && !td.waveActive && !td.gameOver) {
+        startNextWave();
+      }
+    }
+
+    function startNextWave() {
+      if (td.waveActive || td.gameOver) return;
+      playTone(820, 'triangle', 0.09);
+      td.waveActive = true;
+      td.spawnQueue = [];
+
+      const count = 5 + td.wave * 2;
+      for (let i = 0; i < count; i++) {
+        let enemyType = 'scout';
+        if (td.wave >= 2 && i % 3 === 2) enemyType = 'swift';
+        if (td.wave >= 3 && i % 4 === 3) enemyType = 'armored';
+        td.spawnQueue.push(enemyType);
+      }
+      td.spawnTimer = 0.2;
+      updateTdHud();
+    }
+
+    function spawnEnemy(type) {
+      const startPos = gridToPixel(TD_WAYPOINTS_GRID[0].c, TD_WAYPOINTS_GRID[0].r);
+      const scaleHp = 1 + (td.wave - 1) * 0.26;
+      const specs = {
+        scout: { hp: Math.round(48 * scaleHp), speed: 68, reward: 12, color: '#fb7185', radius: 0.24 },
+        swift: { hp: Math.round(36 * scaleHp), speed: 102, reward: 14, color: '#fbbf24', radius: 0.21 },
+        armored: { hp: Math.round(135 * scaleHp), speed: 44, reward: 22, color: '#f97316', radius: 0.29 }
+      };
+      const s = specs[type];
+      td.enemies.push({
+        type,
+        x: startPos.x,
+        y: startPos.y,
+        wpIndex: 1,
+        hp: s.hp,
+        maxHp: s.hp,
+        baseSpeed: s.speed,
+        reward: s.reward,
+        color: s.color,
+        radius: s.radius,
+        slowTimer: 0,
+        slowFactor: 1,
+        hitFlash: 0
+      });
+    }
+
+    function addPopup(x, y, text, color = '#fde047') {
+      td.popups.push({ x, y, text, color, life: 0.9 });
+    }
+
+    function spawnBurst(x, y, color, count = 8) {
+      for (let i = 0; i < count; i++) {
+        const ang = (Math.PI * 2 * i) / count + Math.random() * 0.4;
+        const spd = 45 + Math.random() * 85;
+        td.particles.push({
+          x,
+          y,
+          vx: Math.cos(ang) * spd,
+          vy: Math.sin(ang) * spd,
+          color,
+          life: 0.38 + Math.random() * 0.2,
+          maxLife: 0.55
+        });
+      }
+    }
+
+    function handleTdCanvasClick(px, py) {
+      if (td.gameOver) return;
+      const cell = pixelToGrid(px, py);
+      if (!cell) {
+        closeTowerActionPill();
+        return;
+      }
+
+      // Check if an existing tower is on this cell
+      const existing = td.towers.find(t => t.c === cell.c && t.r === cell.r);
+      if (existing) {
+        openTowerActionPill(existing);
+        return;
+      }
+
+      closeTowerActionPill();
+
+      // Only build on tile type 0
+      if (TD_MAP[cell.r][cell.c] !== 0) {
+        playTone(220, 'sawtooth', 0.06, 0.025);
+        addPopup(px, py - 10, 'Jalur Terkunci', '#fda4af');
+        return;
+      }
+
+      const spec = TOWER_SPECS[td.selectedBuildType];
+      if (td.gold < spec.cost) {
+        playTone(220, 'sawtooth', 0.06, 0.025);
+        addPopup(px, py - 10, 'Gold Kurang!', '#fda4af');
+        return;
+      }
+
+      td.gold -= spec.cost;
+      const center = gridToPixel(cell.c, cell.r);
+      td.towers.push({
+        c: cell.c,
+        r: cell.r,
+        x: center.x,
+        y: center.y,
+        type: td.selectedBuildType,
+        level: 1,
+        totalInvested: spec.cost,
+        cooldown: 0,
+        angle: 0,
+        recoil: 0
+      });
+
+      playTone(760, 'sine', 0.07);
+      spawnBurst(center.x, center.y, spec.color, 10);
+      addPopup(center.x, center.y - 16, `-${spec.cost}G`, '#fcd34d');
+      updateTdHud();
+    }
+
+    function openTowerActionPill(tower) {
+      playTone(660);
+      td.selectedTower = tower;
+      const spec = TOWER_SPECS[tower.type];
+      const upgCost = Math.round(spec.cost * 0.85 * tower.level);
+      const sellVal = Math.round(tower.totalInvested * 0.7);
+
+      const pill = document.getElementById('towerActionPill');
+      document.getElementById('towerActionLabel').textContent = `${spec.name} Lv.${tower.level}`;
+
+      const upgBtn = document.getElementById('towerUpgradeBtn');
+      if (tower.level >= 3) {
+        upgBtn.textContent = 'MAX LVL';
+        upgBtn.disabled = true;
+        upgBtn.classList.add('opacity-50');
+      } else {
+        upgBtn.textContent = `Upgrade (${upgCost}G)`;
+        upgBtn.disabled = false;
+        upgBtn.classList.remove('opacity-50');
+      }
+
+      document.getElementById('towerSellBtn').textContent = `Sell (+${sellVal}G)`;
+
+      const clampedX = Math.min(cw - 135, Math.max(135, tower.x));
+      const clampedY = Math.max(54, tower.y - td.tileSize * 0.42);
+      pill.style.left = `${clampedX}px`;
+      pill.style.top = `${clampedY}px`;
+      pill.classList.remove('hidden');
+    }
+
+    function closeTowerActionPill() {
+      td.selectedTower = null;
+      document.getElementById('towerActionPill').classList.add('hidden');
+    }
+
+    function upgradeSelectedTower() {
+      const t = td.selectedTower;
+      if (!t || t.level >= 3) return;
+      const spec = TOWER_SPECS[t.type];
+      const upgCost = Math.round(spec.cost * 0.85 * t.level);
+      if (td.gold < upgCost) {
+        playTone(220, 'sawtooth', 0.06);
+        showToast('Gold tidak cukup untuk upgrade!');
+        return;
+      }
+      td.gold -= upgCost;
+      t.level += 1;
+      t.totalInvested += upgCost;
+      playTone(920, 'triangle', 0.08);
+      spawnBurst(t.x, t.y, spec.color, 12);
+      addPopup(t.x, t.y - 18, `LV.${t.level}!`, '#38bdf8');
+      updateTdHud();
+      openTowerActionPill(t);
+    }
+
+    function sellSelectedTower() {
+      const t = td.selectedTower;
+      if (!t) return;
+      const sellVal = Math.round(t.totalInvested * 0.7);
+      td.gold += sellVal;
+      td.towers = td.towers.filter(item => item !== t);
+      playTone(460, 'sine', 0.06);
+      spawnBurst(t.x, t.y, '#94a3b8', 8);
+      addPopup(t.x, t.y - 14, `+${sellVal}G`, '#86efac');
+      closeTowerActionPill();
+      updateTdHud();
+    }
+
+    function updateNodeDefense(rawDt) {
+      const dt = Math.min(0.05, rawDt) * td.speedMult;
+      td.corePulsePhase += dt * 3.2;
+
+      if (td.gameOver) return;
+
+      // Spawn enemies from queue
+      if (td.waveActive && td.spawnQueue.length > 0) {
+        td.spawnTimer -= dt;
+        if (td.spawnTimer <= 0) {
+          const nextType = td.spawnQueue.shift();
+          spawnEnemy(nextType);
+          td.spawnTimer = Math.max(0.45, 0.92 - td.wave * 0.03);
+        }
+      }
+
+      // Check wave clear
+      if (td.waveActive && td.spawnQueue.length === 0 && td.enemies.length === 0) {
+        td.waveActive = false;
+        const clearBonus = 20 + td.wave * 5;
+        td.gold += clearBonus;
+        td.wave += 1;
+        playTone(880, 'triangle', 0.1);
+        showToast(`Wave Selesai! Bonus +${clearBonus}G`);
+        updateTdHud();
+        if (td.autoWave) {
+          setTimeout(() => {
+            if (activeGameId === 'node-defense' && td.autoWave && !td.waveActive && !td.gameOver) {
+              startNextWave();
+            }
+          }, 900);
+        }
+      }
+
+      // Move enemies along waypoints
+      for (let i = td.enemies.length - 1; i >= 0; i--) {
+        const e = td.enemies[i];
+        if (e.hitFlash > 0) e.hitFlash -= dt;
+        if (e.slowTimer > 0) {
+          e.slowTimer -= dt;
+          if (e.slowTimer <= 0) e.slowFactor = 1;
+        }
+
+        const targetWp = TD_WAYPOINTS_GRID[e.wpIndex];
+        if (!targetWp) {
+          // Reached Core
+          td.enemies.splice(i, 1);
+          td.lives = Math.max(0, td.lives - 1);
+          playTone(170, 'sawtooth', 0.14, 0.05);
+          const corePos = gridToPixel(11, 5);
+          spawnBurst(corePos.x, corePos.y, '#fb7185', 14);
+          updateTdHud();
+          if (td.lives <= 0) {
+            td.gameOver = true;
+            document.getElementById('overlayBadge').textContent = 'Core Breached';
+            document.getElementById('overlayTitle').textContent = `Bertahan Hingga Wave ${td.wave}`;
+            document.getElementById('overlaySub').textContent = 'Pertahanan inti ditembus drone musuh. Coba pasang Frost di tikungan dan Railgun di belakang.';
+            document.getElementById('gameOverlayBanner').classList.remove('hidden');
+          }
+          continue;
+        }
+
+        const tp = gridToPixel(targetWp.c, targetWp.r);
+        const dx = tp.x - e.x;
+        const dy = tp.y - e.y;
+        const dist = Math.hypot(dx, dy);
+        const moveStep = e.baseSpeed * e.slowFactor * (td.tileSize / 54) * dt;
+
+        if (dist <= moveStep) {
+          e.x = tp.x;
+          e.y = tp.y;
+          e.wpIndex += 1;
+        } else {
+          e.x += (dx / dist) * moveStep;
+          e.y += (dy / dist) * moveStep;
+        }
+      }
+
+      // Towers targeting & firing
+      for (const t of td.towers) {
+        const spec = TOWER_SPECS[t.type];
+        const rangePx = spec.rangeTiles * td.tileSize;
+        const dmgMult = 1 + (t.level - 1) * 0.55;
+        const rateMult = 1 - (t.level - 1) * 0.12;
+
+        if (t.recoil > 0) t.recoil = Math.max(0, t.recoil - dt * 5);
+        if (t.cooldown > 0) {
+          t.cooldown -= dt;
+          continue;
+        }
+
+        // Find enemy furthest along path within range
+        let bestTarget = null;
+        let bestProgress = -1;
+        for (const e of td.enemies) {
+          const d = Math.hypot(e.x - t.x, e.y - t.y);
+          if (d <= rangePx) {
+            const progress = e.wpIndex * 1000 - d;
+            if (progress > bestProgress) {
+              bestProgress = progress;
+              bestTarget = e;
+            }
+          }
+        }
+
+        if (!bestTarget) continue;
+
+        t.angle = Math.atan2(bestTarget.y - t.y, bestTarget.x - t.x);
+        t.cooldown = spec.fireRate * rateMult;
+        t.recoil = 1;
+
+        if (t.type === 'pulse') {
+          playTone(740, 'sine', 0.03, 0.015);
+          td.projectiles.push({
+            x: t.x,
+            y: t.y,
+            target: bestTarget,
+            speed: spec.projSpeed * (td.tileSize / 54),
+            damage: Math.round(spec.damage * dmgMult),
+            color: spec.color
+          });
+        } else if (t.type === 'frost') {
+          playTone(480, 'triangle', 0.06, 0.02);
+          td.pulses.push({ x: t.x, y: t.y, maxR: rangePx, r: 10, life: 0.35, color: spec.color });
+          for (const e of td.enemies) {
+            if (Math.hypot(e.x - t.x, e.y - t.y) <= rangePx) {
+              e.slowFactor = spec.slowFactor;
+              e.slowTimer = spec.slowDuration;
+              damageEnemy(e, Math.round(spec.damage * dmgMult), spec.color);
+            }
+          }
+        } else if (t.type === 'rail') {
+          playTone(310, 'sawtooth', 0.08, 0.025);
+          td.beams.push({
+            x1: t.x,
+            y1: t.y,
+            x2: bestTarget.x,
+            y2: bestTarget.y,
+            life: 0.22,
+            color: spec.color
+          });
+          damageEnemy(bestTarget, Math.round(spec.damage * dmgMult), spec.color);
+        }
+      }
+
+      // Update projectiles
+      for (let i = td.projectiles.length - 1; i >= 0; i--) {
+        const p = td.projectiles[i];
+        if (!td.enemies.includes(p.target)) {
+          td.projectiles.splice(i, 1);
+          continue;
+        }
+        const dx = p.target.x - p.x;
+        const dy = p.target.y - p.y;
+        const d = Math.hypot(dx, dy);
+        const step = p.speed * dt;
+        if (d <= step + 6) {
+          damageEnemy(p.target, p.damage, p.color);
+          td.projectiles.splice(i, 1);
+        } else {
+          p.x += (dx / d) * step;
+          p.y += (dy / d) * step;
+        }
+      }
+
+      // Update visual effects
+      td.beams = td.beams.filter(b => (b.life -= dt) > 0);
+      td.pulses = td.pulses.filter(p => {
+        p.life -= dt;
+        p.r += (p.maxR - p.r) * Math.min(1, dt * 12);
+        return p.life > 0;
+      });
+      td.particles = td.particles.filter(pt => {
+        pt.life -= dt;
+        pt.x += pt.vx * dt;
+        pt.y += pt.vy * dt;
+        return pt.life > 0;
+      });
+      td.popups = td.popups.filter(pop => {
+        pop.life -= dt;
+        pop.y -= 26 * dt;
+        return pop.life > 0;
+      });
+    }
+
+    function damageEnemy(enemy, dmg, hitColor) {
+      enemy.hp -= dmg;
+      enemy.hitFlash = 0.08;
+      if (enemy.hp <= 0) {
+        const idx = td.enemies.indexOf(enemy);
+        if (idx !== -1) {
+          td.enemies.splice(idx, 1);
+          td.gold += enemy.reward;
+          spawnBurst(enemy.x, enemy.y, enemy.color, 9);
+          addPopup(enemy.x, enemy.y - 10, `+${enemy.reward}G`, '#fde047');
+          updateTdHud();
+        }
+      } else {
+        spawnBurst(enemy.x, enemy.y, hitColor, 3);
+      }
+    }
+
+    function renderNodeDefense() {
+      // Deep sleek dark-slate arena background
+      const bgGrad = ctx.createLinearGradient(0, 0, cw, ch);
+      bgGrad.addColorStop(0, '#090d16');
+      bgGrad.addColorStop(1, '#111827');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, cw, ch);
+
+      const ts = td.tileSize;
+
+      // Draw Grid Tiles
+      for (let r = 0; r < TD_ROWS; r++) {
+        for (let c = 0; c < TD_COLS; c++) {
+          const x = td.offsetX + c * ts;
+          const y = td.offsetY + r * ts;
+          const tileType = TD_MAP[r][c];
+
+          if (tileType === 0) {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.035)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.07)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.roundRect(x + 2, y + 2, ts - 4, ts - 4, 8);
+            ctx.fill();
+            ctx.stroke();
+          } else {
+            // Glowing Path Tile
+            ctx.fillStyle = 'rgba(56, 189, 248, 0.11)';
+            ctx.beginPath();
+            ctx.roundRect(x + 1, y + 1, ts - 2, ts - 2, 6);
+            ctx.fill();
+          }
+        }
+      }
+
+      // Draw Smooth Glowing Path Centerline
+      ctx.save();
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+      ctx.lineWidth = Math.max(4, ts * 0.12);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      TD_WAYPOINTS_GRID.forEach((wp, idx) => {
+        const p = gridToPixel(wp.c, wp.r);
+        if (idx === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
+      ctx.stroke();
+      ctx.restore();
+
+      // Draw SPAWN Portal
+      const spawnP = gridToPixel(TD_WAYPOINTS_GRID[0].c, TD_WAYPOINTS_GRID[0].r);
+      ctx.save();
+      ctx.fillStyle = 'rgba(244, 63, 94, 0.22)';
+      ctx.beginPath();
+      ctx.arc(spawnP.x, spawnP.y, ts * 0.36, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#fb7185';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = '#fecdd3';
+      ctx.font = `700 ${Math.max(9, Math.floor(ts * 0.18))}px Inter, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('SPAWN', spawnP.x, spawnP.y - ts * 0.42);
+      ctx.restore();
+
+      // Draw CORE Crystal
+      const coreP = gridToPixel(11, 5);
+      const pulseR = ts * (0.34 + Math.sin(td.corePulsePhase) * 0.04);
+      ctx.save();
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.25)';
+      ctx.beginPath();
+      ctx.arc(coreP.x, coreP.y, pulseR * 1.35, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.moveTo(coreP.x, coreP.y - pulseR);
+      ctx.lineTo(coreP.x + pulseR * 0.85, coreP.y);
+      ctx.lineTo(coreP.x, coreP.y + pulseR);
+      ctx.lineTo(coreP.x - pulseR * 0.85, coreP.y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#bae6fd';
+      ctx.font = `700 ${Math.max(9, Math.floor(ts * 0.18))}px Inter, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('CORE', coreP.x, coreP.y - ts * 0.42);
+      ctx.restore();
+
+      // Hover Build Ghost & Range Ring Preview
+      if (td.hoverCell && !td.gameOver) {
+        const { c, r } = td.hoverCell;
+        const center = gridToPixel(c, r);
+        const occupied = td.towers.some(t => t.c === c && t.r === r);
+        const canBuild = TD_MAP[r][c] === 0 && !occupied;
+        const spec = TOWER_SPECS[td.selectedBuildType];
+
+        if (canBuild) {
+          // Range ring
+          ctx.save();
+          ctx.fillStyle = 'rgba(56, 189, 248, 0.08)';
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.38)';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([5, 4]);
+          ctx.beginPath();
+          ctx.arc(center.x, center.y, spec.rangeTiles * ts, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // Ghost tower base
+          ctx.setLineDash([]);
+          ctx.fillStyle = spec.color;
+          ctx.globalAlpha = 0.55;
+          ctx.beginPath();
+          ctx.arc(center.x, center.y, ts * 0.28, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        } else if (!occupied) {
+          ctx.fillStyle = 'rgba(244, 63, 94, 0.22)';
+          ctx.beginPath();
+          ctx.roundRect(td.offsetX + c * ts + 3, td.offsetY + r * ts + 3, ts - 6, ts - 6, 8);
+          ctx.fill();
+        }
+      }
+
+      // Selected Tower Range Ring
+      if (td.selectedTower) {
+        const st = td.selectedTower;
+        const spec = TOWER_SPECS[st.type];
+        ctx.save();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+        ctx.strokeStyle = spec.color;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(st.x, st.y, spec.rangeTiles * ts, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Frost AoE Pulses
+      for (const p of td.pulses) {
+        ctx.save();
+        ctx.strokeStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.life / 0.35);
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Draw Placed Towers
+      for (const t of td.towers) {
+        const spec = TOWER_SPECS[t.type];
+        const baseR = ts * 0.31;
+        ctx.save();
+        ctx.translate(t.x, t.y);
+
+        // Pedestal
+        ctx.fillStyle = '#1e293b';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, baseR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Turret Barrel
+        ctx.save();
+        ctx.rotate(t.angle);
+        const kick = t.recoil * 3.5;
+        ctx.fillStyle = spec.color;
+        if (t.type === 'pulse') {
+          ctx.fillRect(0 - kick, -3.5, baseR * 1.15, 7);
+        } else if (t.type === 'rail') {
+          ctx.fillRect(0 - kick, -4.5, baseR * 1.4, 9);
+        }
+        ctx.restore();
+
+        // Turret Core Geometry
+        ctx.fillStyle = spec.color;
+        ctx.beginPath();
+        if (t.type === 'pulse') {
+          ctx.arc(0, 0, baseR * 0.56, 0, Math.PI * 2);
+        } else if (t.type === 'frost') {
+          ctx.moveTo(0, -baseR * 0.65);
+          ctx.lineTo(baseR * 0.65, 0);
+          ctx.lineTo(0, baseR * 0.65);
+          ctx.lineTo(-baseR * 0.65, 0);
+          ctx.closePath();
+        } else {
+          ctx.rect(-baseR * 0.48, -baseR * 0.48, baseR * 0.96, baseR * 0.96);
+        }
+        ctx.fill();
+
+        // Level pips
+        for (let lv = 0; lv < t.level; lv++) {
+          ctx.fillStyle = '#fde047';
+          ctx.beginPath();
+          ctx.arc((lv - (t.level - 1) / 2) * 6, baseR + 5, 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      // Draw Railgun Beams
+      for (const b of td.beams) {
+        ctx.save();
+        ctx.strokeStyle = b.color;
+        ctx.globalAlpha = Math.max(0, b.life / 0.22);
+        ctx.lineWidth = 5;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(b.x1, b.y1);
+        ctx.lineTo(b.x2, b.y2);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.8;
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Draw Enemies + Health Bars
+      for (const e of td.enemies) {
+        const er = ts * e.radius;
+        ctx.save();
+        ctx.fillStyle = e.hitFlash > 0 ? '#ffffff' : e.color;
+        ctx.beginPath();
+        if (e.type === 'armored') {
+          ctx.roundRect(e.x - er, e.y - er, er * 2, er * 2, 5);
+        } else if (e.type === 'swift') {
+          ctx.moveTo(e.x + er, e.y);
+          ctx.lineTo(e.x - er, e.y - er * 0.85);
+          ctx.lineTo(e.x - er, e.y + er * 0.85);
+          ctx.closePath();
+        } else {
+          ctx.arc(e.x, e.y, er, 0, Math.PI * 2);
+        }
+        ctx.fill();
+
+        // Frost slow ring indicator
+        if (e.slowTimer > 0) {
+          ctx.strokeStyle = '#7dd3fc';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(e.x, e.y, er + 3, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // Clean Health Bar
+        const bw = er * 2.2;
+        const bh = 4;
+        const bx = e.x - bw / 2;
+        const by = e.y - er - 9;
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.fillRect(bx, by, bw, bh);
+        ctx.fillStyle = '#34d399';
+        ctx.fillRect(bx, by, bw * Math.max(0, e.hp / e.maxHp), bh);
+        ctx.restore();
+      }
+
+      // Draw Pulse Projectiles
+      for (const p of td.projectiles) {
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Draw Particles
+      for (const pt of td.particles) {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, pt.life / pt.maxLife);
+        ctx.fillStyle = pt.color;
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, 2.6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Draw Floating Gold/Status Popups
+      for (const pop of td.popups) {
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, pop.life * 1.4);
+        ctx.fillStyle = pop.color;
+        ctx.font = '700 12px Plus Jakarta Sans, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(pop.text, pop.x, pop.y);
+        ctx.restore();
+      }
+    }
+
+    // =========================================================================
+    // 6. OTHER 4 PLAYABLE PROTOTYPE MINI-ENGINES (REAL INTERACTIVE GAMES)
+    // =========================================================================
+    let arcadeState = {
+      score: 0,
+      best: { 'parry-protocol': 0, 'void-thruster': 0, 'grid-dash': 0, 'gravity-sandbox': 0 },
+      over: false,
+      // Parry Protocol
+      parryRingR: 52,
+      parryOrbs: [],
+      parryFlash: 0,
+      parrySpawnTimer: 0,
+      // Void Thruster
+      shipX: 400,
+      shipTargetX: 400,
+      asteroids: [],
+      stars: [],
+      voidTimer: 0,
+      // Grid Dash
+      lane: 1,
+      visualLane: 1,
+      hazards: [],
+      dashTimer: 0,
+      // Gravity Sandbox
+      balls: [],
+      attractorActive: false,
+      attractorX: 400,
+      attractorY: 220
+    };
+
+    function updateArcadeHud() {
+      document.getElementById('arcadeScoreVal').textContent = Math.floor(arcadeState.score);
+      document.getElementById('arcadeBestVal').textContent = Math.floor(arcadeState.best[activeGameId] || 0);
+    }
+
+    function initSelectedGameEngine() {
+      document.getElementById('gameOverlayBanner').classList.add('hidden');
+      if (activeGameId === 'node-defense') {
+        initNodeDefense();
+        return;
+      }
+
+      arcadeState.score = 0;
+      arcadeState.over = false;
+      updateArcadeHud();
+
+      if (activeGameId === 'parry-protocol') {
+        arcadeState.parryOrbs = [];
+        arcadeState.parryFlash = 0;
+        arcadeState.parrySpawnTimer = 0.4;
+      } else if (activeGameId === 'void-thruster') {
+        arcadeState.shipX = cw / 2;
+        arcadeState.shipTargetX = cw / 2;
+        arcadeState.asteroids = [];
+        arcadeState.voidTimer = 0;
+        arcadeState.stars = Array.from({ length: 36 }, () => ({
+          x: Math.random() * cw,
+          y: Math.random() * ch,
+          s: 1 + Math.random() * 2
+        }));
+      } else if (activeGameId === 'grid-dash') {
+        arcadeState.lane = 1;
+        arcadeState.visualLane = 1;
+        arcadeState.hazards = [];
+        arcadeState.dashTimer = 0.3;
+      } else if (activeGameId === 'gravity-sandbox') {
+        arcadeState.balls = Array.from({ length: 14 }, (_, i) => ({
+          x: cw * 0.2 + (i % 5) * (cw * 0.14),
+          y: ch * 0.25 + Math.floor(i / 5) * 65,
+          vx: (Math.random() - 0.5) * 220,
+          vy: (Math.random() - 0.5) * 220,
+          r: 10 + (i % 3) * 4,
+          color: ['#38bdf8', '#a78bfa', '#34d399', '#fbbf24'][i % 4]
+        }));
+      }
+    }
+
+    function restartActiveGame() {
+      playTone(760);
+      initSelectedGameEngine();
+    }
+
+    function triggerParryAction() {
+      if (activeGameId !== 'parry-protocol' || arcadeState.over) return;
+      const cx = cw / 2;
+      const cy = ch / 2;
+      arcadeState.parryFlash = 0.18;
+      let parriedAny = false;
+
+      for (let i = arcadeState.parryOrbs.length - 1; i >= 0; i--) {
+        const orb = arcadeState.parryOrbs[i];
+        const dist = Math.hypot(orb.x - cx, orb.y - cy);
+        if (dist >= arcadeState.parryRingR - 26 && dist <= arcadeState.parryRingR + 28) {
+          arcadeState.parryOrbs.splice(i, 1);
+          arcadeState.score += 10;
+          if (arcadeState.score > arcadeState.best['parry-protocol']) {
+            arcadeState.best['parry-protocol'] = arcadeState.score;
+          }
+          parriedAny = true;
+        }
+      }
+
+      if (parriedAny) {
+        playTone(880, 'triangle', 0.08);
+        updateArcadeHud();
+      } else {
+        playTone(260, 'sine', 0.05);
+      }
+    }
+
+    function triggerArcadeOver(title, sub) {
+      arcadeState.over = true;
+      playTone(180, 'sawtooth', 0.16);
+      document.getElementById('overlayBadge').textContent = 'Run Ended';
+      document.getElementById('overlayTitle').textContent = title;
+      document.getElementById('overlaySub').textContent = sub;
+      document.getElementById('gameOverlayBanner').classList.remove('hidden');
+    }
+
+    function updateAndRenderArcade(dt) {
+      ctx.fillStyle = '#090d16';
+      ctx.fillRect(0, 0, cw, ch);
+
+      if (activeGameId === 'parry-protocol') {
+        const cx = cw / 2;
+        const cy = ch / 2;
+
+        if (!arcadeState.over) {
+          arcadeState.parrySpawnTimer -= dt;
+          if (arcadeState.parrySpawnTimer <= 0) {
+            const ang = Math.random() * Math.PI * 2;
+            const spawnDist = Math.max(cw, ch) * 0.55;
+            arcadeState.parryOrbs.push({
+              x: cx + Math.cos(ang) * spawnDist,
+              y: cy + Math.sin(ang) * spawnDist,
+              speed: 155 + Math.min(180, arcadeState.score * 1.4)
+            });
+            arcadeState.parrySpawnTimer = Math.max(0.55, 1.25 - arcadeState.score * 0.004);
+          }
+
+          for (let i = arcadeState.parryOrbs.length - 1; i >= 0; i--) {
+            const o = arcadeState.parryOrbs[i];
+            const dx = cx - o.x;
+            const dy = cy - o.y;
+            const d = Math.hypot(dx, dy);
+            o.x += (dx / d) * o.speed * dt;
+            o.y += (dy / d) * o.speed * dt;
+            if (d <= 22) {
+              triggerArcadeOver(`Skor Parry: ${arcadeState.score}`, 'Klik layar atau tekan Space tepat saat proyektil menyentuh cincin emas.');
+            }
+          }
+        }
+
+        if (arcadeState.parryFlash > 0) arcadeState.parryFlash -= dt;
+
+        // Parry Ring
+        ctx.strokeStyle = arcadeState.parryFlash > 0 ? '#fde047' : 'rgba(251, 191, 36, 0.45)';
+        ctx.lineWidth = arcadeState.parryFlash > 0 ? 6 : 3;
+        ctx.beginPath();
+        ctx.arc(cx, cy, arcadeState.parryRingR, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Core
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 18, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Incoming orbs
+        for (const o of arcadeState.parryOrbs) {
+          ctx.fillStyle = '#fb7185';
+          ctx.beginPath();
+          ctx.arc(o.x, o.y, 9, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (activeGameId === 'void-thruster') {
+        if (!arcadeState.over) {
+          arcadeState.score += dt * 15;
+          if (arcadeState.score > arcadeState.best['void-thruster']) {
+            arcadeState.best['void-thruster'] = arcadeState.score;
+          }
+          updateArcadeHud();
+
+          arcadeState.shipX += (arcadeState.shipTargetX - arcadeState.shipX) * Math.min(1, dt * 10);
+          arcadeState.voidTimer -= dt;
+          if (arcadeState.voidTimer <= 0) {
+            arcadeState.asteroids.push({
+              x: 30 + Math.random() * (cw - 60),
+              y: -25,
+              r: 14 + Math.random() * 16,
+              vy: 180 + Math.min(240, arcadeState.score * 0.6)
+            });
+            arcadeState.voidTimer = Math.max(0.24, 0.55 - arcadeState.score * 0.0006);
+          }
+
+          const shipY = ch - 56;
+          for (let i = arcadeState.asteroids.length - 1; i >= 0; i--) {
+            const a = arcadeState.asteroids[i];
+            a.y += a.vy * dt;
+            if (Math.hypot(a.x - arcadeState.shipX, a.y - shipY) < a.r + 13) {
+              triggerArcadeOver(`Jarak Tempuh: ${Math.floor(arcadeState.score)}`, 'Asteroid menghantam lambung pesawat. Gerakkan kursor untuk bermanuver.');
+            }
+            if (a.y > ch + 40) arcadeState.asteroids.splice(i, 1);
+          }
+        }
+
+        // Stars
+        ctx.fillStyle = 'rgba(255,255,255,0.45)';
+        for (const s of arcadeState.stars) {
+          s.y = (s.y + 80 * dt) % ch;
+          ctx.fillRect(s.x, s.y, s.s, s.s);
+        }
+
+        // Ship
+        const sy = ch - 56;
+        ctx.fillStyle = '#e0f2fe';
+        ctx.beginPath();
+        ctx.moveTo(arcadeState.shipX, sy - 18);
+        ctx.lineTo(arcadeState.shipX + 15, sy + 14);
+        ctx.lineTo(arcadeState.shipX, sy + 8);
+        ctx.lineTo(arcadeState.shipX - 15, sy + 14);
+        ctx.closePath();
+        ctx.fill();
+
+        // Asteroids
+        for (const a of arcadeState.asteroids) {
+          ctx.fillStyle = '#64748b';
+          ctx.beginPath();
+          ctx.arc(a.x, a.y, a.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (activeGameId === 'grid-dash') {
+        const laneW = Math.min(110, cw * 0.24);
+        const startX = cw / 2 - laneW;
+
+        if (!arcadeState.over) {
+          arcadeState.score += dt * 18;
+          if (arcadeState.score > arcadeState.best['grid-dash']) {
+            arcadeState.best['grid-dash'] = arcadeState.score;
+          }
+          updateArcadeHud();
+
+          arcadeState.visualLane += (arcadeState.lane - arcadeState.visualLane) * Math.min(1, dt * 16);
+          arcadeState.dashTimer -= dt;
+          if (arcadeState.dashTimer <= 0) {
+            const blockedLane = Math.floor(Math.random() * 3);
+            arcadeState.hazards.push({
+              lane: blockedLane,
+              y: -25,
+              vy: 230 + Math.min(240, arcadeState.score * 0.7)
+            });
+            arcadeState.dashTimer = Math.max(0.32, 0.68 - arcadeState.score * 0.0006);
+          }
+
+          const playerY = ch - 62;
+          for (let i = arcadeState.hazards.length - 1; i >= 0; i--) {
+            const h = arcadeState.hazards[i];
+            h.y += h.vy * dt;
+            if (h.lane === arcadeState.lane && Math.abs(h.y - playerY) < 24) {
+              triggerArcadeOver(`Skor Dash: ${Math.floor(arcadeState.score)}`, 'Gunakan tombol A/D, Panah Kiri/Kanan, atau klik sisi kiri/kanan kanvas.');
+            }
+            if (h.y > ch + 40) arcadeState.hazards.splice(i, 1);
+          }
+        }
+
+        // Draw 3 Lanes
+        for (let l = 0; l < 3; l++) {
+          const lx = startX + l * laneW;
+          ctx.strokeStyle = 'rgba(52, 211, 153, 0.22)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(lx, 20);
+          ctx.lineTo(lx, ch - 20);
+          ctx.stroke();
+        }
+
+        // Player Runner
+        const px = startX + arcadeState.visualLane * laneW;
+        const py = ch - 62;
+        ctx.fillStyle = '#34d399';
+        ctx.beginPath();
+        ctx.roundRect(px - 15, py - 15, 30, 30, 8);
+        ctx.fill();
+
+        // Hazards
+        for (const h of arcadeState.hazards) {
+          const hx = startX + h.lane * laneW;
+          ctx.fillStyle = '#fb7185';
+          ctx.beginPath();
+          ctx.roundRect(hx - 22, h.y - 10, 44, 20, 6);
+          ctx.fill();
+        }
+      } else if (activeGameId === 'gravity-sandbox') {
+        arcadeState.score = arcadeState.balls.length;
+        arcadeState.best['gravity-sandbox'] = Math.max(arcadeState.best['gravity-sandbox'], arcadeState.score);
+        updateArcadeHud();
+
+        for (const b of arcadeState.balls) {
+          if (arcadeState.attractorActive) {
+            const dx = arcadeState.attractorX - b.x;
+            const dy = arcadeState.attractorY - b.y;
+            const d = Math.max(25, Math.hypot(dx, dy));
+            b.vx += (dx / d) * 620 * dt;
+            b.vy += (dy / d) * 620 * dt;
+          } else {
+            b.vy += 190 * dt; // gentle gravity
+          }
+
+          b.vx *= 0.996;
+          b.vy *= 0.996;
+          b.x += b.vx * dt;
+          b.y += b.vy * dt;
+
+          if (b.x - b.r < 12) { b.x = 12 + b.r; b.vx = Math.abs(b.vx) * 0.88; }
+          if (b.x + b.r > cw - 12) { b.x = cw - 12 - b.r; b.vx = -Math.abs(b.vx) * 0.88; }
+          if (b.y - b.r < 12) { b.y = 12 + b.r; b.vy = Math.abs(b.vy) * 0.88; }
+          if (b.y + b.r > ch - 12) { b.y = ch - 12 - b.r; b.vy = -Math.abs(b.vy) * 0.88; }
+        }
+
+        // Ball-to-ball elastic collision
+        for (let i = 0; i < arcadeState.balls.length; i++) {
+          for (let j = i + 1; j < arcadeState.balls.length; j++) {
+            const a = arcadeState.balls[i];
+            const b = arcadeState.balls[j];
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            const dist = Math.hypot(dx, dy);
+            const minDist = a.r + b.r;
+            if (dist > 0 && dist < minDist) {
+              const nx = dx / dist;
+              const ny = dy / dist;
+              const overlap = (minDist - dist) * 0.5;
+              a.x -= nx * overlap;
+              a.y -= ny * overlap;
+              b.x += nx * overlap;
+              b.y += ny * overlap;
+              const dvx = b.vx - a.vx;
+              const dvy = b.vy - a.vy;
+              const dot = dvx * nx + dvy * ny;
+              if (dot < 0) {
+                a.vx += dot * nx;
+                a.vy += dot * ny;
+                b.vx -= dot * nx;
+                b.vy -= dot * ny;
+              }
+            }
+          }
+        }
+
+        if (arcadeState.attractorActive) {
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(arcadeState.attractorX, arcadeState.attractorY, 34, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        for (const b of arcadeState.balls) {
+          ctx.fillStyle = b.color;
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    // =========================================================================
+    // 7. CANVAS POINTER & KEYBOARD LISTENERS
+    // =========================================================================
+    function getCanvasCoords(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    canvas.addEventListener('mousemove', (e) => {
+      const pos = getCanvasCoords(e);
+      if (activeGameId === 'node-defense') {
+        td.hoverCell = pixelToGrid(pos.x, pos.y);
+      } else if (activeGameId === 'void-thruster') {
+        arcadeState.shipTargetX = Math.min(cw - 24, Math.max(24, pos.x));
+      } else if (activeGameId === 'gravity-sandbox') {
+        arcadeState.attractorX = pos.x;
+        arcadeState.attractorY = pos.y;
+      }
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+      td.hoverCell = null;
+      arcadeState.attractorActive = false;
+    });
+
+    canvas.addEventListener('mousedown', (e) => {
+      const pos = getCanvasCoords(e);
+      if (activeGameId === 'node-defense') {
+        handleTdCanvasClick(pos.x, pos.y);
+      } else if (activeGameId === 'parry-protocol') {
+        triggerParryAction();
+      } else if (activeGameId === 'grid-dash') {
+        if (pos.x < cw / 2) arcadeState.lane = Math.max(0, arcadeState.lane - 1);
+        else arcadeState.lane = Math.min(2, arcadeState.lane + 1);
+        playTone(680);
+      } else if (activeGameId === 'gravity-sandbox') {
+        arcadeState.attractorActive = true;
+        arcadeState.attractorX = pos.x;
+        arcadeState.attractorY = pos.y;
+        if (arcadeState.balls.length < 36) {
+          arcadeState.balls.push({
+            x: pos.x,
+            y: pos.y,
+            vx: (Math.random() - 0.5) * 180,
+            vy: -140,
+            r: 10 + Math.random() * 6,
+            color: ['#38bdf8', '#a78bfa', '#34d399', '#fbbf24'][arcadeState.balls.length % 4]
+          });
+          playTone(720);
+        }
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      arcadeState.attractorActive = false;
+    });
+
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const pos = getCanvasCoords(e);
+      if (activeGameId === 'node-defense') {
+        td.hoverCell = pixelToGrid(pos.x, pos.y);
+        handleTdCanvasClick(pos.x, pos.y);
+      } else if (activeGameId === 'parry-protocol') {
+        triggerParryAction();
+      } else if (activeGameId === 'void-thruster') {
+        arcadeState.shipTargetX = pos.x;
+      } else if (activeGameId === 'grid-dash') {
+        if (pos.x < cw / 2) arcadeState.lane = Math.max(0, arcadeState.lane - 1);
+        else arcadeState.lane = Math.min(2, arcadeState.lane + 1);
+      } else if (activeGameId === 'gravity-sandbox') {
+        arcadeState.attractorActive = true;
+        arcadeState.attractorX = pos.x;
+        arcadeState.attractorY = pos.y;
+      }
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      const pos = getCanvasCoords(e);
+      if (activeGameId === 'void-thruster') {
+        arcadeState.shipTargetX = Math.min(cw - 24, Math.max(24, pos.x));
+      } else if (activeGameId === 'gravity-sandbox') {
+        arcadeState.attractorX = pos.x;
+        arcadeState.attractorY = pos.y;
+      }
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', () => {
+      arcadeState.attractorActive = false;
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (activeGameId === 'parry-protocol' && e.code === 'Space') {
+        e.preventDefault();
+        triggerParryAction();
+      } else if (activeGameId === 'grid-dash') {
+        if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+          arcadeState.lane = Math.max(0, arcadeState.lane - 1);
+          playTone(680);
+        } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+          arcadeState.lane = Math.min(2, arcadeState.lane + 1);
+          playTone(680);
+        }
+      } else if (activeGameId === 'void-thruster') {
+        if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+          arcadeState.shipTargetX = Math.max(24, arcadeState.shipTargetX - 48);
+        } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+          arcadeState.shipTargetX = Math.min(cw - 24, arcadeState.shipTargetX + 48);
+        }
+      }
+    });
+
+    // =========================================================================
+    // 8. MAIN 60FPS ANIMATION LOOP & SPATIAL WINDOW CONTROLS
+    // =========================================================================
+    let lastTimestamp = 0;
+
+    function mainLoop(timestamp) {
+      if (!lastTimestamp) lastTimestamp = timestamp;
+      const dt = Math.min(0.05, (timestamp - lastTimestamp) / 1000);
+      lastTimestamp = timestamp;
+
+      const isGameVisible = !document.getElementById('gameView').classList.contains('hidden');
+      if (isGameVisible) {
+        if (activeGameId === 'node-defense') {
+          updateNodeDefense(dt);
+          renderNodeDefense();
+        } else {
+          updateAndRenderArcade(dt);
+        }
+      }
+
+      animFrameId = requestAnimationFrame(mainLoop);
+    }
+
+    function setEnvironment(mode) {
+      playTone(720);
+      const sunlit = document.getElementById('sunlitRoomSvg');
+      const midnight = document.getElementById('midnightRoomSvg');
+      const sunBtn = document.getElementById('envSunlitBtn');
+      const midBtn = document.getElementById('envMidnightBtn');
+
+      if (mode === 'midnight') {
+        document.body.classList.add('midnight-mode');
+        sunlit.classList.add('hidden');
+        midnight.classList.remove('hidden');
+        midBtn.classList.add('bg-white/20', 'text-white', 'shadow-sm');
+        midBtn.classList.remove('text-white/70');
+        sunBtn.classList.remove('bg-white/20', 'text-white', 'shadow-sm');
+        sunBtn.classList.add('text-white/70');
+      } else {
+        document.body.classList.remove('midnight-mode');
+        midnight.classList.add('hidden');
+        sunlit.classList.remove('hidden');
+        sunBtn.classList.add('bg-white/20', 'text-white', 'shadow-sm');
+        sunBtn.classList.remove('text-white/70');
+        midBtn.classList.remove('bg-white/20', 'text-white', 'shadow-sm');
+        midBtn.classList.add('text-white/70');
+      }
+    }
+
+    function toggleSfx() {
+      sfxEnabled = !sfxEnabled;
+      document.getElementById('sfxLabel').textContent = `SFX: ${sfxEnabled ? 'ON' : 'OFF'}`;
+      document.getElementById('sfxDot').classList.toggle('bg-emerald-400', sfxEnabled);
+      document.getElementById('sfxDot').classList.toggle('bg-white/30', !sfxEnabled);
+      if (sfxEnabled) playTone(840);
+    }
+
+    const spatialWindow = document.getElementById('spatialWindow');
+
+    function toggleTilt() {
+      tiltEnabled = !tiltEnabled;
+      playTone(tiltEnabled ? 800 : 520);
+      document.getElementById('tiltLabel').textContent = `3D Tilt: ${tiltEnabled ? 'ON' : 'OFF'}`;
+      if (!tiltEnabled) {
+        spatialWindow.style.transform = 'rotateX(0deg) rotateY(0deg)';
+      }
+    }
+
+    function resetSpatialTilt() {
+      playTone(660);
+      spatialWindow.style.transform = 'rotateX(0deg) rotateY(0deg)';
+      showToast('Spatial Window Recentered');
+    }
+
+    function recenterPulse() {
+      playTone(760);
+      spatialWindow.style.transform = 'scale(0.992)';
+      setTimeout(() => {
+        spatialWindow.style.transform = 'scale(1)';
+      }, 150);
+    }
+
+    document.addEventListener('mousemove', (e) => {
+      const rect = spatialWindow.getBoundingClientRect();
+      spatialWindow.style.setProperty('--mx', `${e.clientX - rect.left}px`);
+      spatialWindow.style.setProperty('--my', `${e.clientY - rect.top}px`);
+
+      if (!tiltEnabled || window.innerWidth < 768) return;
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+      const rotY = ((e.clientX - cx) / cx) * 2.8;
+      const rotX = -((e.clientY - cy) / cy) * 2.1;
+      spatialWindow.style.transform = `rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg)`;
+    });
+
+    document.addEventListener('mouseleave', () => {
+      spatialWindow.style.transform = 'rotateX(0deg) rotateY(0deg)';
+    });
+
+    // Boot directly into Beranda (Portfolio Hub) of Roja Rizqullah
+    window.onload = function () {
+      switchToHub();
+      animFrameId = requestAnimationFrame(mainLoop);
+    };
+  </script>
+</body>
+</html>
